@@ -1,0 +1,68 @@
+##############################################
+#	agsyn.0.6.1 (abysw.0.7.6)
+#############################################
+
+# In this software, there are 6 scripts.
+# 1. the main script
+	`abysw agsyn run `
+
+# 2. sort the chromosome order
+	`abysw agsyn.sort reference query`
+
+# 3. extra syntenic results
+	`abysw agsyn.syn reference query`
+
+# 4. Draw the picture
+	`abysw agsyn.draw query.agsyn`
+
+# 5. Annotate the special genes by genewise2
+	`abysw agsyn gwise2 run`
+
+# 6. Anchor contigs to pseudo-chromosome
+	`abysw agsyn.anchor reference query`
+
+############################################
+### quickly start
+############################################
+Prepared the genome file and the protein evidence.
+	genome/
+		Genus_species.fa
+	protein/
+		protein1.pep
+		protein2.pep
+
+run the main script
+	`abysw agsyn run`
+##########################################
+Prepared syntenic relationships
+	run jcvi for .simple files
+
+###################################################
+# Run syntenic by agsyn
+prepare reference infomation
+	Elmis_aenea.aact Elmis_aenea.achr Elmis_aenea.acol Elmis_aenea.agsyn Elmis_aenea.asex Elmis_aenea.seqids 
+	###################################################
+ 
+#reference species
+R=Gallus_gallus
+#species name list
+S=species.lst
+#path of species infomation
+P=~/agsyn/ref/$R
+##########################################################
+
+mkdir 03.agss
+cd 03.agss
+cp 02.synteny/*anchors/*{bed,info,simple} . 
+cp $P/$R.a* .
+cp /proj/snic2020-2-25/nobackup/yuan/10.AgSyn/99.publish_transfer/agsyn_sexG/*gff .
+
+for i in `cat $S | grep -v $R`;do 
+	abysw agsyn.sort $R $i # sort chromosome order
+	abysw agsyn.syn $R $i  # obtain .agsyn files
+done 
+
+cat $S | perl -ne 'chomp; print "$_.agsyn "' | perl -ne 'chomp; `cat $_ > Draw.agsyn`' && mv Draw.agsyn $S.agsyn
+abysw agsyn.draw $S.agsyn # draw syntenic
+
+#mkdir 04.agsx

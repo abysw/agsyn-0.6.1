@@ -1,0 +1,2014 @@
+#!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
+# Author: Yuan-SW-F(abysw), abysw@abysw.com
+# Created Time: 2020 (year)
+# Updating Time: 2024-02-25
+# Version : Python3, abysw v0.8.12
+# Webset : abysw.com, abysw.cn, github.com(abysw)
+# Example abysw command option
+# A Bless form Yuan to Sun Wenjing.
+
+from __future__ import print_function
+import sys, os, re
+import os.path as op
+import logging
+import string
+import getopt
+import ahelp
+from string import Template
+
+a_version = ahelp.c_cyan("ABYSsWrapper version is 0.7.3 20240225 upgraded version")
+a_help = ahelp.c_red("Please type `abysw -h` for more information")
+def printusage():
+	
+	print (ahelp.a_head(a_version))
+	print (c_white(
+"""
+usage:  abysw command option
+	-a --add [s]                         * add prematers 
+	-n --number [i]                      * number
+	-i --input [s]                       * input files
+	-o --output [s]                      * output file prefix or total name
+	-p --prefix [s]                      * files' prefix
+	-s --suffix [s]                      * files' suffix
+	-r --reference [s]                   * reference genome file
+	-d --default                         * default 
+	-v --version                         * print version information
+	-h --help                            * print detail help information
+	a.                                   * genome Wrapper (a.), assembly & annotation
+	c.                                   * change format Wrapper (c.)
+	e.                                   * evalute & extract Wrapper (e. & ex.)
+	f.                                   * filter Wrapper (f.)
+	l.                                   * link Wrapper (l.)
+	s.                                   * statistics Wrapper (s.)
+
+	abysw active                         * for activing future ABYSsWrapper environment
+"""))
+
+#################### color set ################################
+def c_red(word):
+	return ("""\033[1;31m""" + word + """\033[0m""")
+def c_green(word):
+	return ("""\033[1;32m""" + word + """\033[0m""")
+def c_yellow(word):
+	return ("""\033[1;33m""" + word + """\033[0m""")
+def c_blue(word):
+	return ("""\033[1;34m""" + word + """\033[0m""")
+def c_magenta(word):
+	return ("""\033[1;35m""" + word + """\033[0m""")
+def c_cyan(word):
+	return ("""\033[1;36m""" + word + """\033[0m""")
+def c_white(word):
+	return ("""\033[1;37m""" + word + """\033[0m""")
+
+col_list = ("black", "red", "green", "yellow", "blue", "magenta", "cyan", "white")
+j_ab = -1
+word = ' '.join(sys.argv[2:])
+if len(sys.argv) < 2:
+	sys.exit(printusage())
+
+for i in col_list:
+    j_ab = j_ab + 1
+    if sys.argv[1] == i:
+        print ("""\033[1;3""" + str(j_ab) + """m""" + word + """\033[0m""")
+        exit()
+
+
+#################### furture command set  ######################
+def shell_(cmd_id):
+	_shell_ = os.popen('ls ' + abyss_path + '/../*/abysw.' + cmd_id + '{.pl,.py,.sh,.R,.shell.pl}  2> /dev/null | tail -n 1')
+	_shell_ = _shell_.readline()
+	_shell_ = _shell_.strip()
+	return _shell_
+
+def read_shell(cmd_cmd):
+	read_shell_ = os.popen(cmd_cmd)
+	read_shell_ = read_shell_.readline()
+	read_shell_ = read_shell_.strip()
+	return read_shell_
+
+#################### global variable  ##########################
+date_ = read_shell('date +%Y-%m-%d\ %k:%M')
+
+a_defalt = 0
+a_number = 0
+a_input = ""
+a_output = ""
+a_reference = ""
+a_add = ""
+def main(argv):
+	
+	global a_defalt
+	global a_number
+	global a_input
+	global a_output
+	global a_reference
+	global a_prefix
+	global a_suffix
+	global a_add
+	global date_
+	global aw_
+	global aw_help
+	aw_help = {}
+	aw_ = ""
+	try:
+		opts, args = getopt.getopt(argv,"hvdn:i:o:r:",["help","version","defalt","number", "input", "output", "prefix", "suffix","reference", "add"])
+	except getopt.GetoptError:
+		printusage()
+		print (a_help)
+		sys.exit(2)
+	for opt, arg in opts:
+		if opt in ('-h', "--help"):
+			printusage();
+			ahelp.genome();
+			ahelp.change_format();
+			ahelp.draw();
+			ahelp.evalute()
+			ahelp.filter();
+			ahelp.compare()
+			ahelp.genefamily()
+			ahelp.syntenic()
+			ahelp.statistics()
+			ahelp.resequence()
+			ahelp.standin()
+			ahelp.task()
+			ahelp.unclass()
+
+			sys.exit()
+		elif opt in ('-v', "--version"):
+			print (a_version)
+			sys.exit()
+		elif opt in ('-n', '--number'):
+			a_number = arg
+			sys.argv.remove('-n')
+			sys.argv.remove('--number')
+		elif opt in ("-d", "--defalt"):
+			a_defalt = 1
+			sys.argv.remove('-d')
+			sys.argv.remove('--defalt')
+		elif opt in ("-i", "--input"):
+			a_input = arg
+			sys.argv.remove("-i")
+			sys.argv.remove("--input")
+		elif opt in ("-o", "--output"):
+			a_output = arg
+			sys.argv.remove("-o")
+			sys.argv.remove("--output")
+		elif opt in ("-p", "--prefix"):
+			a_prefix = arg
+			sys.argv.remove("-p")
+			sys.argv.remove("--prefix")
+		elif opt in ("-s", "--suffix"):
+			a_suffix = arg
+			sys.argv.remove("-s")
+			sys.argv.remove("--suffix")
+		elif opt in ("-r", "--reference"):
+			a_reference = arg
+			sys.argv.remove("-r")
+			sys.argv.remove("--reference")
+		elif opt in ("-a", "--add"):
+			a_add = arg
+			sys.argv.remove("-a")
+			sys.argv.remove("--add")
+
+
+	global abyss_path
+#	abyss_path = sys.path[0]
+	abyss_path = os.path.dirname(os.path.abspath(__file__))
+#	abyss_path = abyss_path.replace("/home/" + os.getlogin(), "~")
+#	abyss_path = re.sub(rf'^/home/yuanfu', '~', abyss_path, count=1)
+#	abyss_path = re.sub(rf'^/home/{re.escape(os.getlogin())}', '~', abyss_path, count=1)
+#script_directory_shortened = re.sub(rf'^/home/{re.escape(os.getlogin())}/', '~', os.path.dirname(os.path.abspath(__file__)), count=1)
+
+#################### default set ######################
+	if len(sys.argv) < 2:
+		sys.exit(printusage())
+	else:
+		if sys.argv[1] == "list":
+			os.system(abyss_path + "/abysw -h  | less | grep 32 | cat")
+		elif sys.argv[1] in "help":
+			printusage()
+		elif sys.argv[1] in "resequence":
+			ahelp.resequence()
+		elif sys.argv[1] in "genome":
+			ahelp.genome()
+		elif sys.argv[1] in "change_format":
+			ahelp.change_format()
+		elif sys.argv[1] in "draw":
+			ahelp.change_format()
+		elif sys.argv[1] in "evalute":
+			ahelp.evalute()
+		elif sys.argv[1] in "filter":
+			ahelp.filter()
+		elif sys.argv[1] in "statistics":
+			ahelp.statistics()
+		elif sys.argv[1] in "syntenic":
+			ahelp.syntenic()
+		elif sys.argv[1] in "genefamily" and len(sys.argv) == 2:
+			ahelp.genefamily()
+		elif sys.argv[1] in "standin":
+			ahelp.standin()
+		elif sys.argv[1] in "comparate":
+			ahelp.comparate()
+		elif sys.argv[1] in "unclass":
+			ahelp.unclass()
+		elif sys.argv[1] == "task":
+			ahelp.task()
+###############################################################################################
+### from local script #########################################################################
+###############################################################################################
+
+########################## no parameter #####################
+### conda activate
+		elif sys.argv[1] == "ca":
+			os.system("conda activate " + sys.argv[1] + '''; PS1="\[\e[1;35m\][\[\e[1;33m\]\\u@Yuan-SW-F $DATE \A \[\e[1;36m\]\w\[\e[1;35m\]]\[\e[1;31m\]\n\$ \[\e[0m\]" && [[ $CONDA_DEFAULT_ENV ]] && PS1="($CONDA_DEFAULT_ENV)"$PS1''')
+### snap
+		elif sys.argv[1] == "snap" or sys.argv[1] == "maker":
+			cmd_id = sys.argv[1]
+			if len(sys.argv) == 2:
+				os.system ("perl " + shell_(cmd_id))
+			else:
+				os.system ("perl " + shell_(cmd_id) + " " + sys.argv[2])
+
+### stat.busco
+		elif sys.argv[1] == "stat.busco" or sys.argv[1] == "s.busco" or sys.argv[1] == "s.b":
+			cmd_id = "stat.busco"
+			if len(sys.argv) == 2:
+				os.system ("perl " + shell_(cmd_id))
+			elif len(sys.argv) >= 2:
+				for i in sys.argv[2:]:
+					os.system ("perl " + shell_(cmd_id) + " " + i)
+			else:
+				print (c_blue("please use busco enviroment"))
+				ahelp.help(sys.argv[1])
+				print (c_green("abysw " + cmd_id + " sequence"))
+
+### sumbed
+		elif sys.argv[1] == "sumbed":
+			if len(sys.argv) == 2:
+				cmd = """awk '{i+=1;j+=$3-$2}END{print i"\t"j}' """
+				os.system(cmd)
+			else:
+				ahelp.help(sys.argv[1])
+				print ("cat file.bed |abysw sumbed              # statistics bed file")
+
+### sumgff
+		elif sys.argv[1] == "sumgff":
+			if len(sys.argv) == 2:
+				cmd = """ awk '{i+=1;j+=$5-$4+1}END{print i"\t"j}' """
+				os.system(cmd)
+			else:
+				ahelp.help(sys.argv[1])
+### matrix
+		elif sys.argv[1] == "matrix":
+			if len(sys.argv) == 2:
+				cmd_matrix="""perl -e 'while (<>){$h{$1}{$2} = $3 if /(\S+)\s+(\S+)\s+(\S+)/; $check{$2} =1;} ;  print join "\t", "class", sort(keys %check); print "\n"; for $i(sort (keys %h)){print $i; for $j(sort (keys %check)){print exists $h{$i}{$j} ? "\t$h{$i}{$j}" : "\t0";} print "\n"}'"""
+				os.system(cmd_matrix)
+
+### nohup
+		elif sys.argv[1] == "nohup":
+			if len(sys.argv) == 2:
+				os.system('''for i in `ls *sh`;do echo "nohup sh $i > $i.log 2> $i.err &"; done''')
+			else:
+				os.system('''for i in `ls ''' + "\t".join(sys.argv[2:]) + '''`;do echo "nohup sh $i > $i.log 2> $i.err &"; done''')
+
+### lst
+		elif sys.argv[1] == "lst":
+			if len(sys.argv) == 2:
+				os.system(""" perl -e 'while (<STDIN>){ if (/\n/){ $n++; chomp; push @i,$_; }else{ push @i,$_; } } if ($n<2){ $l=$i[0]; @i=split /\s+/,$l; $l=join "\n",@i; print "$l\n"; }else{ $l=join " ",@i; print "$l\n"; }' """)
+		
+### togff
+		elif sys.argv[1] == "togff":
+			type = 'mRNA'
+			if sys.argv == 3:
+				type = sys.argv[2]
+			os.system('''perl -ne '@l=split;if ($l[2] eq "''' + type + '''"){print "$l[0]\t";$l[8]=~/=([^\;\s]+)/;print "$1\t$l[3]\t$l[4]\t$l[6]\n"} ' ''')
+
+		elif sys.argv[1] == "rev":
+			os.system("perl -ne 'chomp;$i=$_; $i=~tr/[ATCG]/[TAGC]/; $i=reverse($i);print $i'")
+		elif sys.argv[1] == "hi2fa":
+			os.system("""awk '/^S/{print \">\"$2\"\\n\"$3}'""")
+		elif sys.argv[1] == "fqlen":
+			os.system("perl -ne '$i = <>;$len = length($i); <>; <>; print \"$len\\n\"' | awk '{i++; j+=$1}END{print i\"\\t\"j}'")
+		elif sys.argv[1] == "ipr":
+			if len(sys.argv) <  3:
+				ahelp.help("ipr")
+			else:
+				print ('export PATH=/abysw/soft/annotation/interproscan-5.56-89.0:$PATH;\ninterproscan.sh -i ' + sys.argv[2] + ' -b ' + sys.argv[2] + '.iprscan -goterms -iprlookup -pa -dp -cpu 24')
+		elif sys.argv[1] == "orthofinder":
+			if len(sys.argv) >= 3:
+				ahelp.help(sys.argv[1])
+			else:
+				print ("orthofinder -t 250 -a 250 -d -f ./ -S diamond")
+
+#                elif sys.argv[1] == "dl.genome":
+#                    if len(sys.argv) >= 3:
+#                        print ("datasets download genome taxon snakes --assembly-level chromosome,complete --include gff3,protein --filename snakes.zip")
+####################################################################
+		elif sys.argv[1] == "a.":
+			ahelp.genome()
+		elif sys.argv[1] == "b.":
+			print (c_green("blast et al.: compare sequence (b.)"))
+			print (c_white("\tb.blastn\n\tb.bwa\n\tb.minimap2"))
+		elif sys.argv[1] == "c.":
+			ahelp.change_format()
+		elif sys.argv[1] == "d.":
+			ahelp.draw()
+		elif sys.argv[1] == "e.":
+			ahelp.evalute()
+		elif sys.argv[1] == "f.":
+			ahelp.filter()
+		elif sys.argv[1] == "l.":
+			print (c_green("link files (l.)"))
+			print (c_white("l.chr"))
+		elif sys.argv[1] == "s.":
+			ahelp.statistics()
+		elif sys.argv[1] == "syn.":
+			ahelp.syntenic()
+		elif sys.argv[1] == "log":
+			ahelp.alog()
+		elif sys.argv[1] == "simple":
+			print(ahelp.simple())
+		elif sys.argv[1] == "more":
+			print(ahelp.more())
+		elif sys.argv[1] == "manual" or sys.argv[1] == "m.":
+			ahelp.manual()
+		elif sys.argv[1] == "ahelp":
+			os.system("vi " + abyss_path + "/ahelp.py")
+		elif sys.argv[1] == "blog" and len(sys.argv) == 2:
+			ahelp.blog()
+		
+		elif sys.argv[1] == "sample":
+			os.system("ls " + abyss_path + """/../* | perl -ne 'if ($_!~/\//){print "    ";}print'""")
+		elif sys.argv[1] in ["R", "assembler", "combin", "shell", "perl", 'python']:
+			print ('export PATH=' + abyss_path + "/../" + sys.argv[1] + ':$PATH')
+		elif sys.argv[1] == "env":
+			print ("source " + abyss_path + """/config.txt""")
+		elif sys.argv[1] == "path":
+			print (abyss_path)
+		elif sys.argv[1] == "active":
+			cmd = 'source ' + abyss_path + '/../../abysw.cfg'
+			print (cmd)
+		elif sys.argv[1] == "sum":
+			if len(sys.argv) == 2:
+				print ("abysw sum [tophat,] file")
+
+####################################################################
+		elif len(sys.argv) == 2:
+			ahelp.help(sys.argv[1])
+		elif len(sys.argv) == 3 and sys.argv[2] == "-h":
+			ahelp.help(sys.argv[1])
+
+		elif sys.argv[1] == "cmd":
+			os.system (' '.join(sys.argv[2:]))
+
+####################################################################################
+#################### bio subs ######################################################
+####################################################################################
+### augustus
+		elif sys.argv[1] == "augustus":
+			cmd_id = "augustus"
+			if len(sys.argv) == 3:
+				species_ = sys.argv[2]
+				if not os.path.exists('Trinity.fasta'):
+					print ("please make sure if you has Trinity.fasta")
+				if not os.path.exists(species_ + "_genome.fa"):
+					print ("please make sure if you has " + species_ + "_genome.fa")
+				print ("start for augustus train of " + species_)
+				os.system ("sh " + shell_(cmd_id) + " " + species_)
+
+### 3dDNA
+		elif sys.argv[1] == "3dDNA" or sys.argv[1] == "hicpro":
+			cmd_id = sys.argv[1]
+			if len(sys.argv) == 3:
+				os.system ("sh " + shell_(cmd_id) + " " + sys.argv[2])
+
+### hifiasm
+		elif sys.argv[1] == "hifiasm":
+			cmd_id = sys.argv[1]
+			if len(sys.argv) >= 3:
+				print (c_blue("Start assembly:\n"))
+				print (date_ + "\tInput file is " + sys.argv[2])
+				if len(sys.argv) == 4:
+					print (date_ + "\tKmer is " + sys.argv[3])
+				else:
+					print (date_ + "\tKmer is 51")
+				os.system ("sh " + shell_(cmd_id) + " " + ' '.join(sys.argv[2:]))
+
+### trinity
+		elif sys.argv[1] == "trinity":
+			cmd_id = sys.argv[1]
+			if len(sys.argv) >= 3:
+				os.system ("sh " + shell_(cmd_id) + " " + ' '.join(sys.argv[2:]))
+
+##### EDTA
+		elif sys.argv[1] == "edta":
+			cmd_id = sys.argv[1]
+			if len(sys.argv) == 3:
+				tempTemplate = Template("EDTA.pl --genome $i --overwrite 1 --sensitive 1 --anno 1 --evaluate 1 --threads 50")
+				os.system (tempTemplate.substitute(i=sys.argv[2]))
+
+### gmap
+		elif sys.argv[1] == "gmap":
+			cmd_id = sys.argv[1]
+			if len(sys.argv) == 4:
+				os.system ("sh " + shell_(cmd_id) + " " + ' '.join(sys.argv[2:]))
+
+### close
+		elif sys.argv[1] == "close":
+			cmd_id = sys.argv[1]
+			if len(sys.argv) == 4:
+				tempTemplate = Template("sambamba markdup -r -t 40 $sam $sam.mk.bam\nsamtools view -S -b -q 30 -o $sam.mk-ft.bam.bam $sam.mk.bam\nsamtools index $sam.mk-ft.bam.bam\n/abysw/app/miniconda3/envs/java8/bin/java -Xmx10G -jar /abysw/jar/pilon-1.24.jar --genome $ref --jumps  $sam.mk-ft.bam.bam --fix snps,indels --output ${ref}_polished --vcf")
+				os.system (tempTemplate.substitute(sam=sys.argv[2], ref=sys.argv[3]))
+
+### cdhit
+		elif sys.argv[1] == "cdhit":
+			cmd_id = sys.argv[1]
+			if len(sys.argv) == 4:
+				os.system ("sh " + shell_(cmd_id) + " " + ' '.join(sys.argv[2:]))
+
+### reseq
+		elif sys.argv[1] == "reseqs":
+			cmd_id = sys.argv[1]
+			if len(sys.argv) >= 4:
+				os.system ("sh " + shell_(cmd_id) + " " + ' '.join(sys.argv[2:]))
+			else:
+				print (c_blue("please use gatk4 enviroment"))
+				print (c_green("abysw " + cmd_id + " refence fastq out step"))
+				print (c_green("Step:"))
+				print (c_white("\t##### step 0: filter reads #####\n\t##### step 1: Map to Reference ####\n\t##### step 2: *** Mark Duplicates *** #####\n\t##### step 3: call SNP by mpileup #####\n\t##### step 4: *** BQSR,ReduceReads *** #####\n\t##### step 5: HaplotypeCaller #####"))
+
+		elif sys.argv[1] == "gffread":
+			cmd_id = sys.argv[1]
+			if len(sys.argv) == 3:
+				tempTemplate = Template("gffread $ref.gff -g $ref.fa -x $ref.cds -y $ref.pep")
+				os.system (tempTemplate.substitute(ref=sys.argv[2]))
+############################ genome ##########################################
+##### assembly RNA
+		elif sys.argv[1] == "a.rna":
+			cmd_id = sys.argv[1]
+			if len(sys.argv) >= 4:
+				os.system ("sh " + shell_(cmd_id) + " " + ' '.join(sys.argv[2:]))
+
+##### assembly meta
+		elif sys.argv[1] == "a.meta":
+			cmd_id = sys.argv[1]
+			if len(sys.argv) >= 4:
+				os.system ("sh " + shell_(cmd_id) + " " + ' '.join(sys.argv[2:]))
+			else:
+				print (c_green("abysw " + cmd_id + " reference.fa query.fa"))
+
+##### ann iso
+		elif sys.argv[1] == "iso":
+			cmd_id = "isoform"
+			if len(sys.argv) >= 4:
+				os.system ("sh " + shell_(cmd_id) + " " + ' '.join(sys.argv[2:]))
+			else:
+				print (c_green("abysw " + cmd_id + " RNAID genome_fasta"))
+
+##### genemark
+		elif sys.argv[1] == "gmark":
+			if len(sys.argv) == 3:
+				os.system("gmes_petap.pl --ES --sequence " + ' '.join(sys.argv[2:]))
+			else:
+				print (c_green("abysw " + sys.argv[1] + " genome_fasta"))
+############################ blast et al.: compare sequence ######################
+##### blastn for short reads
+		elif sys.argv[1] == "blastn":
+			cmd_id = sys.argv[1]
+			if len(sys.argv) >= 4:
+				eva = "1e-5"
+				if len(sys.argv) == 5:
+					eva = sys.argv[4]
+				tempTemplate = Template("[[ -s $pa1.nin ]] || [[ -s $pa1.00.nin ]] || makeblastdb -in $pa1 -dbtype nucl > db.log\nblastn -db $pa1 -query $pa2 -evalue $pa3 -outfmt 6 -num_threads 64 > $pa10.$pa20.m8")
+				re_pa1 = re.search('([^\/]+)$', sys.argv[2])
+				re_pa2 = re.search('([^\/]+)$', sys.argv[3])
+#				os.system (tempTemplate.substitute(pa1=sys.argv[2], pa2=sys.argv[3], pa3=eva))
+				os.system (tempTemplate.substitute(pa1=sys.argv[3], pa2=sys.argv[2], pa3=eva, pa10=re_pa1.group(1), pa20=re_pa2.group(1)))
+			else:
+				ahelp.help(cmd_id)
+
+		elif sys.argv[1] == "diomand":
+			cmd_id = sys.argv[1]
+			if len(sys.argv) >= 4:
+				eva = "1e-5"
+				if len(sys.argv) == 5:
+					eva = sys.argv[4]
+				tempTemplate = Template("[[ -e $pa1.dmnd ]] || diamond makedb -d  $pa1 --in $pa1 > db.log\ndiamond blastp -d $pa1 -q $pa2 -e $pa3 > $pa10.$pa20.m8")
+				re_pa1 = re.search('([^\/]+)$', sys.argv[2])
+				re_pa2 = re.search('([^\/]+)$', sys.argv[3])
+				os.system (tempTemplate.substitute(pa1=sys.argv[3], pa2=sys.argv[2], pa3=eva, pa10=re_pa1.group(1), pa20=re_pa2.group(1)))
+			else:
+				ahelp.help(cmd_id)
+
+#diamond makedb -d $P --in $P 2>/dev/null
+#    diamond blastx -b 0.5 -d $P -q $G -o $G.blast --threads
+##### blastp for short protein
+		elif sys.argv[1] == "blastp":
+			cmd_id = sys.argv[1]
+			if len(sys.argv) >= 4:
+				eva = "1e-5"
+				if len(sys.argv) == 5:
+					eva = sys.argv[4]
+				tempTemplate = Template("[[ -e $pa1.pin ]] || makeblastdb -in $pa1 -dbtype prot > db.log\nblastp -db $pa1 -query $pa2 -evalue $pa3 -outfmt 6 -num_threads 64 > $pa10.$pa20.m8")
+				re_pa1 = re.search('([^\/]+)$', sys.argv[2])
+				re_pa2 = re.search('([^\/]+)$', sys.argv[3])
+#				os.system (tempTemplate.substitute(pa1=sys.argv[2], pa2=sys.argv[3], pa3=eva))
+#				print (tempTemplate.substitute(pa1=sys.argv[3], pa2=sys.argv[2], pa3=eva, pa10=re_pa1.group(1), pa20=re_pa2.group(1)))
+
+				os.system (tempTemplate.substitute(pa1=sys.argv[3], pa2=sys.argv[2], pa3=eva, pa10=re_pa1.group(1), pa20=re_pa2.group(1)))
+			else:
+				ahelp.help(cmd_id)
+
+##### blastn for short reads
+		elif sys.argv[1] == "blastnr":
+			cmd_id = sys.argv[1]
+			if len(sys.argv) >= 3:
+				eva = "1e-60"
+				if len(sys.argv) == 4:
+					eva = sys.argv[3]
+				tempTemplate = Template("diamond blastp -d /abysw/db/ncbi/blast/total/nr.dmnd -q $pa1 --evalue $pa2 ")
+				os.system (tempTemplate.substitute(pa1=sys.argv[2], pa2=eva))
+
+##### bwa for short reads
+		elif sys.argv[1] == "repair":
+			cmd_id = "repair"
+			if len(sys.argv) == 4:
+				tempTemplate = Template("repair.sh in1=$R1 in2=$R2 out1=$R1.fixed.fq.gz out2=$R2.fixed.fq.gz outsingle=$R1.singletons.fq.gz")
+				os.system (tempTemplate.substitute(R1=sys.argv[2], R2=sys.argv[3]))
+		elif sys.argv[1] == "b.bwa" or sys.argv[1] == "bwa":
+			cmd_id = "bwa"
+			if len(sys.argv) >= 4:
+				r2 = ""
+				if len(sys.argv) == 5:
+					r2 = sys.argv[4]
+				tempTemplate = Template("[[ -e $i.ann ]] || bwa index $i\nbwa mem -t 64 $i $j $k -o $i-$j.sam\nsamtools flagstat $i-$j.sam > $i-$j.sam.stat\nsamtools coverage $i-$j.sam > $i-$j.sam.cov\nsamtools view -@ 64 -S -b -q 10 -o $i-$j.bam $i-$j.sam\nsamtools sort -@ 64 -O bam -m 5G -o $i-$j.sorted.bam $i-$j.bam\nsamtools index -@ 64 $i-$j.sorted.bam\nrm $i-$j.sam\n#rm $i-$j.bam\nsamtools coverage $i-$j.sorted.bam > $i-$j.sorted.bam.cov\n")
+#				tempTemplate = Template("[[ -e $i.ann ]] || bwa index $i\nbwa mem -t 64 $i $j $k -o $i-$j.sam\nsamtools flagstat $i-$j.sam > $i-$j.sam.stat\nsamtools coverage $i-$j.sam > $i-$j.sam.cov\nsamtools view -@ 64 -S -b -o $i-$j.bam $i-$j.sam\nsamtools sort -@ 64 -O bam -o $i-$j.sorted.bam $i-$j.bam\nsamtools index -@ 64 $i-$j.sorted.bam\nrm $i-$j.sam\n#rm $i-$j.bam\nsamtools coverage $i-$j.sorted.bam > $i-$j.sorted.bam.cov\n")
+				os.system (tempTemplate.substitute(i=sys.argv[2], j=sys.argv[3], k=r2))
+
+##### minimap2 for long reads
+		elif sys.argv[1] == "b.minimap2" or sys.argv[1] == "minimap2" or sys.argv[1] == "minimap":
+			cmd_id = "minimap2"
+			if len(sys.argv) >= 4:
+				map_m = "map-pb"
+				if len(sys.argv) == 5:
+					map_m = sys.argv[4]
+				tempTemplate = Template("minimap2 -t 32 -ax $map_m --split-prefix undefined $i $j > $i-$j.sam\nsamtools view -@ 128 -S -b -q 10 -o $i-$j.bam $i-$j.sam\nsamtools sort -@ 128 -O bam -o $i-$j.sorted.bam $i-$j.bam\nsamtools index -@ 128 $i-$j.sorted.bam\nrm $i-$j.sam\nrm $i-$j.bam\n")
+				print (tempTemplate.substitute(i=sys.argv[2], j=sys.argv[3], map_m = map_m))
+				os.system (tempTemplate.substitute(i=sys.argv[2], j=sys.argv[3], map_m = map_m))
+
+############################ change format  ######################################
+##### add gff id
+		elif sys.argv[1] == "c.gff":
+			gffid(sys.argv[2:])
+		elif sys.argv[1] == "c.fa":
+			faid(sys.argv[2:])
+
+##### rename gff gene ID
+		elif sys.argv[1] == "c.ann":
+			cmd_id = "filter.sCDS"
+			if len(sys.argv) == 4:
+				os.system ("perl " + shell_(cmd_id) + " " + " ".join(sys.argv[2:]))
+				cmd_id = "newname"
+				os.system ("perl " + shell_(cmd_id) + " " + " " + sys.argv[3] + ".l.gff " + sys.argv[3])
+			else:
+				print (c_green("abysw " + cmd_id + " species.gff species"))
+				
+##### gfa2fa
+		elif sys.argv[1] == "gfa2fa":
+			if len(sys.argv) == 3:
+				cmd = 'awk \'/^S/{print ">"$2"\\n"$3}\' ' + sys.argv[2] + " > " + sys.argv[2] + ".fa"
+				os.system(cmd)
+
+##### fastq to fasta
+		elif sys.argv[1] == "fq2fa":
+			if len(sys.argv) == 3:
+				fo = open(sys.argv[2], 'r')
+				for line in fo:
+					line = line.strip()
+					re_id = re.match('@', line)
+					if re_id:
+						line = line.replace('@', '>')
+					print (line)
+					newline = fo.readline()
+					newline = newline.strip()
+					print (newline)
+					newline = fo.readline()
+					newline = fo.readline()
+
+		elif sys.argv[1] == "fq2fa":
+			cmd_id = sys.argv[1]
+			if len(sys.argv) == 3:
+				os.system ("perl " + shell_(cmd_id) + " " + " ".join(sys.argv[2:]))
+
+############################ evalute ############################################
+##### lai
+		elif sys.argv[1] == "edta.lai":
+			if len(sys.argv) == 3:
+				tempTemplate = Template("LTR_retriever -genome ../../$genome -inharvest $genome.mod.harvest.combine.scn -infinder $genome.mod.finder.combine.scn -threads 50")
+				cmd_ = (tempTemplate.substitute(genome=sys.argv[2]))
+				os.system (cmd_)
+			else:
+				ahelp.help(sys.argv[1])
+
+		elif sys.argv[1] == "lai" or sys.argv[1] == "e.lai":
+			cmd_id = "lai"
+			if len(sys.argv) == 3:
+				simi = "70" #85
+				ltrl = "7000" # 6000 -M = 0.9
+				tempTemplate = Template("mkdir ${seqfile}_LTR; cd ${seqfile}_LTR\nln -s  ../${seqfile}\ngt suffixerator -db ${seqfile} -indexname $seqfile.index -tis -suf -lcp -des -ssp -dna\ngt ltrharvest -similar $simi -index $seqfile.index -out $seqfile.out$simi -outinner $seqfile.outinner$simi -gff3 $seqfile.gff$simi -minlenltr 100 -maxlenltr 6000 -mindistltr 1500 -maxdistltr 25000 -mintsd 5 -maxtsd 5 -vic 10  > $seqfile.result$simi\nltr_finder -D 15000 -d 1000 -L $ltrl -l 100 -p 20 -C -M 0.70 $seqfile > ltr.finder.scn\nLTR_retriever -genome $seqfile -inharvest $seqfile.result$simi -infinder ltr.finder.scn -threads 50\ncat ${seqfile}.*pass.list.gff3 | ")
+				cmd_ = (tempTemplate.substitute(seqfile=sys.argv[2], simi=simi, ltrl=ltrl))
+				cmd_ += 'awk \'$3=="repeat_region"{split($9,a,";");print $1","a[3]","a[5]}\' | sed \'s/Classification\=LTR\///g;s/ltr_identity\=//g\' | awk -F \',\' \'{print $2"\\t"(1-$3)}\' '  
+				tempTemplate = Template("> ${seqfile}.LTR-K.list\nabysw ltr.plots ${seqfile}.LTR-K.list ${seqfile}.Insertion_time2.K-2r.pdf")
+				cmd_ += (tempTemplate.substitute(seqfile=sys.argv[2]))
+				print (cmd_)
+			else:
+				print (c_blue("please use maker enviroment"))
+				print (c_green("abysw lai genome.fa"))
+##### busco
+		elif sys.argv[1] == "busco" or sys.argv[1] == "e.busco" or sys.argv[1] == "e.b":
+			cmd_id = "busco" #sys.argv[1]
+			if len(sys.argv) >= 3:
+				for i in sys.argv[2:]:
+					os.system ("sh " + shell_(cmd_id) + " " + i)
+			else:
+				print (c_blue("please use busco enviroment"))
+				print (c_green("abysw " + cmd_id + " sequence"))
+
+############################ extract ############################################
+##### extract fasta by gene list
+		elif sys.argv[1] == "getfa" or sys.argv[1] == "ex.fa":
+			cmd_id = sys.argv[1]
+			if len(sys.argv) == 4:
+				getfa(sys.argv[2:])
+			else:
+				print (c_green("abysw " + cmd_id + " id.list sequence.fa"))
+		
+############################ filter ############################################
+##### filter HIC
+		elif sys.argv[1] == "f.hic":
+			cmd_id = "filter.HIC"
+			if len(sys.argv) == 3:
+				os.system ("sh " + shell_(cmd_id) + " " + ' '.join(sys.argv[2:]))
+			else:
+				print (c_green("abysw " + cmd_id + " HIC_R1.fastq.gz"))
+
+##### filter HIC
+		elif sys.argv[1] == "f.bgi":
+			cmd_id = "filter.BGI"
+			if len(sys.argv) == 3:
+				os.system ("sh " + shell_(cmd_id) + " " + ' '.join(sys.argv[2:]))
+			else:
+				print (c_green("abysw " + cmd_id + " BGI_R1.fastq.gz"))
+
+##### filter HIC
+		elif sys.argv[1] == "f.iso":
+			cmd_id = "filter.iso"
+			if len(sys.argv) >= 3:
+				os.system ("perl " + shell_(cmd_id) + " " + ' '.join(sys.argv[2:]))
+			else:
+				print (c_green("abysw " + cmd_id + " ann.gff [suffix]"))
+
+##### filter valid
+		elif sys.argv[1] == "f.valid":
+			cmd_id = "filter.valid"
+			if len(sys.argv) == 3:
+				os.system ("perl " + shell_(cmd_id) + " " + ' '.join(sys.argv[2:]))
+			else:
+				print (c_green("abysw " + cmd_id + " SampleName"))
+
+############################ link ##############################################
+##### link chr
+		elif sys.argv[1] == "l.chr":
+			cmd_id = "link.chr"
+			if len(sys.argv) == 4:
+				os.system ("perl " + shell_(cmd_id) + " " + ' '.join(sys.argv[2:]))
+			else:
+				print (c_green("abysw " + cmd_id + " genome.fa loc.bed"))
+
+############################ statistics ########################################
+### stat.gene
+		elif sys.argv[1] == "stat.gene" or sys.argv[1] == "s.gene":
+			cmd_id = "stat.gene"
+			if len(sys.argv) >= 3:
+				os.system ("perl " + shell_(cmd_id) + " " + ' '.join(sys.argv[2:]))
+			else:
+				print (c_green("abysw " + cmd_id + " gene.gff*"))
+
+##### abysw.stat.blastn.pl
+		elif sys.argv[1] == "stat.blastn" or sys.argv[1] == "s.blastn":
+			cmd_id = "stat.blastn"
+			if len(sys.argv) == 4:
+				os.system ("perl " + shell_(cmd_id) + " " + ' '.join(sys.argv[2:]))
+			else:
+				print (c_green("abysw " + cmd_id + " query.fa blastn.m8"))
+
+############################ syntenic anaysis ########################################
+##### jcvi
+		elif sys.argv[1] == "syn.jcvi" or sys.argv[1] == "synteny.jcvi" or sys.argv[1] == "jcvi":
+			cmd_id = "synteny.jcvi"
+			if len(sys.argv) >= 4:
+				os.system ("perl " + shell_(cmd_id) + " " + ' '.join(sys.argv[2:]))
+			else:
+				print (c_blue("please use jcvi enviroment"))
+				print (c_green("abysw " + cmd_id + " cds1 cds2"))
+##### syntenic.NGS
+		elif sys.argv[1] == "syn.ngs" or sys.argv[1] == "syntenic.NGS" or sys.argv[1] == "ngs":
+			cmd_id = "syntenic.NGS"
+			my_output = ''
+			if a_output:
+				my_output = " -o " + a_output
+				my_suffix = " -s " + a_suffix
+			if len(sys.argv) >= 4:
+				os.system ("perl " + shell_(cmd_id) + " " +  my_output + " " + " " +  my_output + " " + ' '.join(sys.argv[2:]))
+				#a_output
+				#os.system ("perl " + shell_(cmd_id) + " " + ' '.join(sys.argv[2:]))
+			else:
+				print (c_blue("please use jcvi enviroment"))
+				print (c_green("abysw " + cmd_id + " [-o out -s suffix ] sp1 sp2 ..."))
+
+############################# draw picture #############################################
+##### gene density
+		elif sys.argv[1] == "d.density" or sys.argv[1] == "gene_density" or sys.argv[1] == "dst":
+			cmd_id = "gene_density"
+			if len(sys.argv) >= 4:
+				os.system ("perl " + shell_(cmd_id) + " " +  ' '.join(sys.argv[2:]))
+			else:
+				print (c_green("abysw " + cmd_id + " genome.fa gene.gff repeat.gff window"))
+############################ task task task ########################################
+############################ task task task ########################################
+##### dir 
+		elif sys.argv[1] == "dir":
+			if len(sys.argv) >= 3:
+				now_path = os.getcwd()
+				sub_dir = ''
+				sub_fil = ''
+				for i in sys.argv[2:]:
+					re_p = re.match('(\S+)\/([^\/]+)$', i)
+					if re_p:
+						sub_dir = re_p.group(1)
+						sub_fil = re_p.group(2)
+						tempTemplate = Template("cd $n/$d; $i $f")
+						print (tempTemplate.substitute(i=sys.argv[2], n=now_path, d=sub_dir, f=sub_fil))
+						#os.system (tempTemplate.substitute(i=sys.argv[2], n=now_path, d=sub_dir, f=sub_fil))
+			else:
+				print (c_green("abysw " + cmd_id + " 'cmd' file"))
+
+### "lowcov"	
+		elif sys.argv[1] == "lowcov":
+			cmd_id = ''
+			lowcov = 3
+			if len(sys.argv) == 3:
+				cmd_id = sys.argv[2]
+			elif len(sys.argv) == 4:
+				cmd_id = sys.argv[2]
+				lowcov = int(sys.argv[3])
+			else:
+				exit(ahelp.help(sys.argv[1]))
+			fo = open(cmd_id, 'r')
+			head = fo.readline()
+			print (head, end = '')
+			for i in fo:
+				line = i.strip().split()
+				ck = 0
+				for j in line[1:len(line)-1]:
+					if int(j) > lowcov:	ck += 1
+					if int(j) == 0: ck += 1
+				if ck == 0:
+					print (i, end = '')
+
+# RBH
+		elif sys.argv[1] == "rbh":
+			if len(sys.argv) == 4:
+				f_m8 = sys.argv[2]
+				r_m8 = sys.argv[3]
+				f_dict = {}
+				r_dict = {}
+				fo = open(f_m8, 'r')
+				for line in fo:
+					lines = line.strip().split()
+					if lines[0] not in r_dict.keys():
+						r_dict[lines[0]] = lines[1]
+				fo = open(r_m8, 'r')
+				for line in fo:
+					lines = line.strip().split()
+					if lines[0] not in f_dict.keys():
+						f_dict[lines[0]] = lines[1]
+						if lines[1] in r_dict.keys():
+							if lines[0] != r_dict[lines[1]]:
+								continue
+							if len(lines) > 10:
+								print ("\t".join([lines[1], lines[0], lines[2], lines[10]]))
+							else:
+								print ("\t".join([lines[1], lines[0]]))
+
+			else:
+				exit(ahelp.help(sys.argv[1]))
+			
+
+# bestm8
+		elif sys.argv[1] == "bestm8":
+			if len(sys.argv) == 3:
+				cmd_id = sys.argv[2]
+			else:
+				exit(ahelp.help(sys.argv[1]))
+			fo = open(cmd_id, 'r')
+			id_dict = {}
+			for i in fo:
+				re_id = re.match('((\w\w\w\w\w)\S+)', i)
+				id = ''
+				if re_id:
+					id = re_id.group(2)
+					if not id in id_dict.keys():
+						print (re_id.group(1))
+						id_dict[id] = 1
+
+############################### blog ###########################################
+##### blog
+		elif sys.argv[1] == "blog":
+			if len(sys.argv) >= 3:
+				cmd_id = sys.argv[2]
+				now_path = abyss_path + "/../blog/github/hexo/source/_posts";
+				if cmd_id == "path":
+					print (now_path)
+				elif cmd_id == "up":
+					os.system ("cd " + now_path + "/../../; sh ../login.sh")
+				elif cmd_id == "list":
+					a_aa = os.popen("ls -ltr " + now_path + " | perl -ne 's/\s+/\ /g; print \"$_\\n\"' | cut -d ' ' -f 6-9 | grep md$ | sed s/.md$// | perl -ne 's/\s+(\S+)$/\t$1/; print \"$_\"'")
+					for i in a_aa:
+						print (ahelp.c_green(i), end ='')
+				elif cmd_id == "tags":
+					os.system ("ls -l " + now_path + "/../../public/tags")
+				elif cmd_id == "categories":
+					os.system ("ls -l " + now_path + "/../../public/categories")
+				else:
+					new_blog = now_path + "/" + cmd_id + ".md"
+					new_tags = ["categories:",
+					"description: 本文件由abysw软件的blog模块编辑和发表",
+					"tags:"
+					]
+					new_img = "![使用方法等详细信息请关注公众号【生物信息分析学习】（swxxfxxx）](https:abysw.github.io/images/swxxfxxx.png)"
+					new_img += "\n\n【提示】本文写作命令为：abysw blog " + cmd_id
+					new_img += "\n【 另 】有任何问题，欢迎来公众号交流！"
+					new_img += "\n<!--more-->\n"
+					if (os.path.exists(new_blog)):
+						os.system ("vi " + new_blog)
+					else:
+						os.system ("cd " + now_path + "; hexo new " + cmd_id + "; sed -i '4s/^tags:/" + "\\n".join(new_tags) + "/' " + new_blog)
+						os.system("echo '" + new_img + "' >> " + new_blog)
+						os.system("vi " + new_blog)
+			else:
+				ahelp.blog()
+
+###############################################################################################
+### from other script #########################################################################
+###############################################################################################
+		elif sys.argv[1] == "cds2aa":
+			cds2aa = abyss_path + "/cds2aa"
+			if len(sys.argv) == 2:
+				print (cds2aa + " cds.file")
+			elif len(sys.argv) == 3:
+				os.system(cds2aa + " " + sys.argv[2])
+			elif len(sys.argv) == 4:
+				os.system(cds2aa + " --check " + sys.argv[2] + " | cut -f 1 | grep -vP \"^Id$\" > " + sys.argv[2] + ".delid")
+				os.system("abysw getfa " + sys.argv[2] + ".delid " + sys.argv[2] + " 2> " + sys.argv[2] + ".new >/dev/null")
+				os.system(cds2aa + " " + sys.argv[2] + ".new")
+#				os.system("rm " + sys.argv[2] + ".delid " + sys.argv[2] + ".new")
+		elif sys.argv[1] == "n50":
+			n50 = abyss_path + "/n50"
+			if len(sys.argv) == 2:
+				print (n50 + " file.fasta")
+			else:
+				os.system(n50 + " " + sys.argv[2])
+
+### for cmd ####################################################################################
+		elif sys.argv[1] == "sum":
+			if len(sys.argv) == 2:
+				print ("abysw sum [tophat,] file")
+			elif len(sys.argv) == 3:
+				print ("abysw sum tophat file")
+			elif len(sys.argv) > 3:
+				 cmd = ''
+				 cmd += """perl -e '$file=""" + "\"" + sys.argv[3] + "\"" +  """;	 $head=$1.$2 if $file=~/\/([^\/][^\/][^\/])[^\/]+([^\/][^\/][^\/])\/[^\/]+$/;	 $head||="tophat";	 $head.="\tL-M(mul)\tR-M(mul)\toverall\tCP-A\tInput reads";	 $text=`less $file`; $text=~s/\s//g; print "$head\n"; print join "\t","rate (%)",$1,$2,$3,$4 if $text=~/\(([\d\.]+)\%ofinput\).+\(([\d\.]+)\%ofinput\).+\)([\d\.]+)\%overall.+alignments([\d\.]+)\%concordant/;	 print "\t$1\n" if `less $file`=~/Input\s+\:\s+(\d+)/;	 print "*M(mul): Mapped(multiple alignments);L-:Left; R-:Right; CP-A:concordant pair alignment\n";'	 """
+				 os.system(cmd)
+
+		elif sys.argv[1] == "domain":
+			if len(sys.argv) == 2:
+				print ("p")
+			elif len(sys.argv) >= 3:
+				cmd = ''
+				for i in sys.argv[2:]:
+					web = "http://pfam.xfam.org/family/"
+					web = "http://pfam-legacy.xfam.org/family/"
+
+					cmd += "wget " + web + i + """/hmm ; head hmm | perl -ne 'print `mv hmm $1.hmm` if /^NAME\s+(\S+)/' """
+				os.system (cmd)
+		elif sys.argv[1] == "tar":
+			if len(sys.argv) == 2:
+				print ("p")
+			elif len(sys.argv) >= 3:
+				cmd = ''
+				for i in sys.argv[2:]:
+					cmd += "tar zcvf " + i + ".tar.gz " + i + "\n"
+				print (cmd)
+		elif sys.argv[1] == "getcds":
+			if len(sys.argv) == 2:
+				print ("please prepare abysw format gff file and fasta file, the fasta file must has a same prefix of gff file")
+			elif len(sys.argv) >= 3:
+				cmd = ''' for i in `ls ''' + sys.argv[2] + ''' | sed s/.gff$//`;do echo "samtools faidx $i.fa && gffread $i.gff -g $i.fa -x $i.cds -y $i.pep 2> $i.err && echo $i"; done '''
+				os.system(cmd)
+		elif sys.argv[1] == "qs":
+			if len(sys.argv) <= 3:
+				print ("please check your tasks, quit!")
+			else:
+				qs(sys.argv[2:])
+		elif sys.argv[1] == "chd":
+			if len(sys.argv) < 2:
+				print ("please input the alias directory name !")
+			elif len(sys.argv) == 2:
+				dir_new = os.getcwd()
+				re_dir = re.search('\S+\/([^\/]+$)', dir_new)
+				if re_dir:
+					dir_new = re_dir.group(1)
+				chd([dir_new])
+			elif len(sys.argv) >= 3:
+				chd(sys.argv[2:])
+		elif sys.argv[1] == "sh":
+			if len(sys.argv) == 2:
+				print ('''abysw sh number''')
+			else:
+				number = os.popen('ls *sh | wc -l')
+				if len(sys.argv) >= 4:
+					number = os.popen('ls ' + "\t".join(sys.argv[3:]) + ' | wc -l')
+				number = number.read()
+				re_num = re.match('(\d+)', number)
+				number = int(re_num.group(1)) / int(sys.argv[2])
+				number = int(number)
+				cmd_sh = ('if [ -e zshell ];then rm -r zshell;fi; mkdir zshell; ls *sh | perl -ne \'chomp;$j++;$i+=' + str(number) + ''' if $j>$i;`echo "echo jobs-start; sh $_ > $_.log 2> $_.err; echo jobs-finished" >> zshell/zz.shell.$i` if $j<=$i; \' ''')
+				if len(sys.argv) >= 4:
+					cmd_sh = ('if [ -e zshell ];then rm -r zshell;fi; mkdir zshell; ls ' + "\t".join(sys.argv[3:]) + ' | perl -ne \'chomp;$j++;$i+=' + str(number) + ''' if $j>$i;`echo "echo jobs-start; sh $_ > $_.log 2> $_.err; echo jobs-finished" >> zshell/zz.shell.$i` if $j<=$i; \' ''')
+				os.system(cmd_sh)
+				os.system ('for i in `ls zshell/zz.shell.*`;do echo "nohup sh $i > $i.log 2> $i.err &"; done')
+				os.system ('echo abysw job.sleep')
+
+### create new script ###########################################################################
+		elif sys.argv[1] == "tree":
+			if len(sys.argv) == 2:
+				print ("abysw tree msa.file                     # msa")
+			else:
+				cmd_tree  = "#muscle -align " + sys.argv[2] + " -output " + sys.argv[2] + ".align\n"
+				cmd_tree += "muscle -in " + sys.argv[2] + " -out " + sys.argv[2] + ".align\n"
+				cmd_tree += "#mafft --maxiterate 100 --thread 5 --localpair " + sys.argv[2] + " > " + sys.argv[2] + ".align\n"
+				cmd_tree += "trimal -in " + sys.argv[2] + ".align -out " + sys.argv[2] + ".align.trimal -automated1\n"
+				cmd_tree += "fasttree " + sys.argv[2] + ".align.trimal > " + sys.argv[2] + ".align.trimal.fast.tree\n"
+				cmd_tree += "abysw fa2phy " + sys.argv[2] + ".align.trimal > " + sys.argv[2] + ".align.trimal.phy\n"
+				cmd_tree += "iqtree -s " + sys.argv[2] + ".align.trimal.phy -m MFP -B 1000 --bnni -T 5\n"
+				ft = open(sys.argv[2] + "_BuildTree.sh", 'w')
+				ft.write(cmd_tree)
+		elif sys.argv[1] == "filterSNP":
+			if len(sys.argv) == 2:
+				print ("abysw filterSNP *raw.vcf.gz")
+			else:
+				#sys.argv[2] = sys.argv[2].split('.gz')[0]
+				cmd_snp = ("### filter SNPs\n".format(sys.argv[2]))
+				cmd_snp += ("\n# remove indels, not PASS, mutiple alleles, low DP\n".format(sys.argv[2]))
+#				cmd_snp += ("vcftools --gzvcf {0}.gz --remove-indels --recode --recode-INFO-all --remove-filtered-all --out {0}.PASS\n".format(sys.argv[2]))
+				#cmd_snp += ("vcftools --gzvcf {0}.gz --remove-indels --remove-filtered-all --recode --recode-INFO-all --out {0}.PASS\n".format(sys.argv[2]))
+				cmd_snp += ("""#less {0} | grep -P "^#|\\tPASS\\t" > {0}.PASS\n""".format(sys.argv[2]))
+				cmd_snp += ("#vcftools --vcf {0}.PASS --recode --remove-indels --recode-INFO-all --min-alleles 2 --max-alleles 2 --max-missing 0.9 --minDP 3 --maxDP 60 --out {0}.PASS.filter\n".format(sys.argv[2]))
+#				cmd_snp += ("\n# extact PASS SNP\n".format(sys.argv[2]))
+#				cmd_snp += ("""less {0}.filter.recode.vcf | perl -ne 'print if /#/ || /\\tPASS\\t/'  > {0}.filter.PASS.vcf\n""".format(sys.argv[2]))
+#				cmd_snp += ("#filterSNP.pl {0} > {0}.PASS.bi.dp.vcf".format(sys.argv[2]))
+#				cmd_snp += ("\n# impute by beagle\n".format(sys.argv[2]))
+#				cmd_snp += ("java -jar /abyss/soft/beagle5.2/beagle.29May21.d6d.jar gt={0}.PASS.bi.dp.vcf out={0}.PASS.filter.beagle \n".format(sys.argv[2]))
+#				cmd_snp += ("\nperl -ne ".format(sys.argv[2]) + """'if (/CHROM/){s/\_//g;}print'""" + " {0}.PASS.bi.dp.vcf > {0}.PASS.filter.beagle.vcf\n".format(sys.argv[2]))
+				cmd_snp += ("\n# plink format\n".format(sys.argv[2]))
+				cmd_snp += ("plink --vcf {0} --make-bed --out {0}.snp --allow-extra-chr\n".format(sys.argv[2]))
+				cmd_snp += ("\n# grep -v scaffold {0} > {0}.chr.vcf\n".format(sys.argv[2]))
+				cmd_snp += ("\n# remove miss site and sample, remove maf\n".format(sys.argv[2]))
+				cmd_snp += ("plink --bfile {0}.snp --geno 0.1 --mind 0.1 --maf 0.05 --make-bed --out {0}.filter2 --allow-extra-chr --allow-no-sex\n".format(sys.argv[2]))
+				cmd_snp += ("plink --bfile {0}.filter2 --recode vcf-iid --out {0}.filter2 --allow-extra-chr\n".format(sys.argv[2]))
+				cmd_snp += ("\n# remove hardy-weiberg equilibrium (ignore)\n".format(sys.argv[2]))
+				cmd_snp += ("#plink --noweb --file {0}.PASS.filter2 --hwe 0.000001 --out {0}.PASS.filter3 --allow-no-sex\n".format(sys.argv[2]))
+				cmd_snp += ("plink --vcf {0}.filter2.vcf --recode --out {0}.filter2 --allow-extra-chr --allow-no-sex\n".format(sys.argv[2]))
+				cmd_snp += ("\n# IBD\n".format(sys.argv[2]))
+				cmd_snp += ("plink --noweb --file {0}.filter2 --genome --allow-extra-chr --allow-no-sex --out {0}.IBD\n".format(sys.argv[2]))
+				cmd_snp += ("\n# heterozygosity and inbreeding\n".format(sys.argv[2]))
+				cmd_snp += ("plink --noweb --file {0}.filter2 --het --allow-extra-chr --allow-no-sex --out {0}.het\n".format(sys.argv[2]))
+				print (cmd_snp)
+		elif sys.argv[1] == "formatSNP":
+			if len(sys.argv) == 2:
+				print ("abysw filterSNP *raw.vcf.gz")
+			else:
+#				cmd_snp = ("### filter SNPs\n".format(sys.argv[2]))
+#				cmd_snp += ("\n# remove indels, not PASS, mutiple alleles, low DP\n".format(sys.argv[2]))
+#				cmd_snp += ("""#less {0} | grep -P "^#|\\tPASS\\t" > {0}.PASS\n""".format(sys.argv[2]))
+#				cmd_snp += ("#vcftools --vcf {0}.PASS --recode --remove-indels --recode-INFO-all --min-alleles 2 --max-alleles 2 --max-missing 0.9 --minDP 3 --maxDP 60 --out {0}.PASS.filter\n".format(sys.argv[2]))
+				cmd_snp = ("\n# plink format\n".format(sys.argv[2]))
+				cmd_snp += ("plink --vcf {0} --make-bed --out {0}.snp --allow-extra-chr\n".format(sys.argv[2]))
+				cmd_snp += ("\n# grep -v scaffold {0} > {0}.chr.vcf\n".format(sys.argv[2]))
+#				cmd_snp += ("\n# remove miss site and sample, remove maf\n".format(sys.argv[2]))
+#				cmd_snp += ("plink --bfile {0}.snp --geno 0.1 --mind 0.1 --maf 0.05 --make-bed --out {0}.filter2 --allow-extra-chr --allow-no-sex\n".format(sys.argv[2]))
+				cmd_snp += ("plink --bfile {0} --recode vcf-iid --out {0} --allow-extra-chr\n".format(sys.argv[2]))
+				cmd_snp += ("\n# remove hardy-weiberg equilibrium (ignore)\n".format(sys.argv[2]))
+#				cmd_snp += ("#plink --noweb --file {0}.PASS --hwe 0.000001 --out {0}.PASS.filter3 --allow-no-sex\n".format(sys.argv[2]))
+				cmd_snp += ("plink --vcf {0} --recode --out {0} --allow-extra-chr --allow-no-sex\n".format(sys.argv[2]))
+				cmd_snp += ("\n# IBD\n".format(sys.argv[2]))
+				cmd_snp += ("plink --noweb --file {0} --genome --allow-extra-chr --allow-no-sex --out {0}.IBD\n".format(sys.argv[2]))
+				cmd_snp += ("\n# heterozygosity and inbreeding\n".format(sys.argv[2]))
+				cmd_snp += ("plink --noweb --file {0} --het --allow-extra-chr --allow-no-sex --out {0}.het\n".format(sys.argv[2]))
+				print (cmd_snp)
+
+
+		elif sys.argv[1] == "joint":
+			if len(sys.argv) == 2:
+				print ("abysw joint ref *g.vcf.gz")
+			else:
+				print ("REF=" + sys.argv[2])
+				print ("gatk CombineGVCFs -R $REF --variant " + " --variant ".join(sys.argv[3:]) + " -O joint.g.vcf.gz")
+				print ("### joint calling")
+				print ("gatk GenotypeGVCFs -R $REF -V joint.g.vcf.gz -O joint.vcf.gz")
+				print ("### SNP calling")
+				print ("gatk SelectVariants -R $REF --select-type SNP -V joint.vcf.gz -O joint.rawSNP.vcf.gz")
+				print ("""gatk VariantFiltration -R $REF -V joint.rawSNP.vcf.gz -O joint.HF.SNP.vcf.gz --filter-name "HardF" --filter-expression "QD < 2.0 || MQ < 40.0 || FS > 60.0 || SOR > 3.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0" """)
+				print ("### indel calling")
+				print ("gatk SelectVariants -R $REF --select-type INDEL -V  joint.vcf.gz -O joint.rawINDEL.vcf.gz")
+				print ("""gatk VariantFiltration -R $REF -V joint.rawINDEL.vcf.gz -O joint.HF.INDEL.vcf.gz --filter-name "HardF" --filter-expression "QD < 2.0 || ReadPosRankSum < -20.0 || InbreedingCoeff < -0.8 || FS > 200.0 || SOR > 10.0" """)
+				print ("""filterSNP.pl joint.HF.SNP.vcf.gz > joint.HF.SNP.PASS.bi.dp.vcf""")
+		elif sys.argv[1] == "gatk":
+			if len(sys.argv) <= 2:
+				print ("abysw gatk reference fastq outprefix");
+			else:
+				gatk(sys.argv[2:])
+#################################################################################################
+#################################################################################################
+		elif sys.argv[1] == "dlssr":
+			os.system("export PATH=~/.abysw/soft/sratoolkit.2.11.0-centos_linux64/bin:$PATH\nfastq-dump --split-3 --gzip " + "\t".join(sys.argv[2:]))
+		elif sys.argv[1] == "gb2gff":
+			gb2gff(sys.argv[2:])
+		elif sys.argv[1] == "splitgvcf":
+			splitgvcf(sys.argv[2:])
+		elif sys.argv[1] == "ld":
+			if len(sys.argv) <= 3:
+				ahelp.help(sys.argv[1])
+			else:
+				ld(sys.argv[2:])
+		elif sys.argv[1] == "fam":
+			if len(sys.argv) <= 4:
+				ahelp.help(sys.argv[1])
+			else:
+				fam(sys.argv[2:])
+		elif sys.argv[1] == "gwas":
+			print ("gemma -bfile " + sys.argv[2] + " -gk 2 -o kinship")
+			print ("gemma -bfile " + sys.argv[2] + " -lmm -k output/kinship.sXX.txt -o GE_GWAS")
+		elif sys.argv[1] == "add":
+			if len(sys.argv) <= 4:
+				ahelp.help(sys.argv[1])
+			else:
+				add(sys.argv[2:])
+		elif sys.argv[1] == "pca":
+			pca(sys.argv[2:])
+		elif sys.argv[1] == "snpeff":
+			snpeff(sys.argv[2:])
+		elif sys.argv[1] == "wig2bed":
+			wig2bed(sys.argv[2:])
+		elif sys.argv[1] == "unqid":
+			unqid(sys.argv[2:])
+		elif sys.argv[1] == "callcbs":
+			callcbs(sys.argv[2:])
+		elif sys.argv[1] == "end":
+			end(sys.argv[2:])
+		elif sys.argv[1] == "sort":
+			sort(sys.argv[2:])
+		elif sys.argv[1] == "miss":
+			miss(sys.argv[2:])
+		elif sys.argv[1] == "getfa":
+			getfa(sys.argv[2:])
+		elif sys.argv[1] == "f.fa":
+			f_fa(sys.argv[2:])
+		elif sys.argv[1] == "maf2bed":
+			maf2bed(sys.argv[2:3])
+		elif sys.argv[1] == "fa2phy":
+			fa2phy(sys.argv)
+		elif sys.argv[1] == "phy2fa":
+			phy2fa(sys.argv)
+		elif sys.argv[1] == "spgff":
+			spgff(sys.argv)
+		elif sys.argv[1] == "cds4gff":
+			get_cds_from_gff(sys.argv)
+		elif sys.argv[1] == "bed4gene":
+			if len(sys.argv) <= 4:
+				ahelp.help(sys.argv[1])
+			else:
+				get_bed_from_gene_list(sys.argv)
+		elif sys.argv[1] == "flank4gene":
+			if len(sys.argv) <  4:
+				ahelp.help(sys.argv[1])
+			else:
+				get_gene_flank(sys.argv[2:])
+		elif sys.argv[1] == "linkfa":
+			linkfa(sys.argv[2:4])
+#################################################################################
+		elif sys.argv[1] == "ipr":
+			print ('export PATH=~/.abysw/soft/annotation/interproscan-5.56-89.0:$PATH;\ninterproscan.sh -i ' + sys.argv[2] + ' -b ' + sys.argv[2] + '.iprscan -goterms -iprlookup -pa -dp -cpu 24')
+
+		elif sys.argv[1] == "hmms":
+			if len(sys.argv) <  4:
+				print ("pls think how to use it")
+			db = sys.argv[2]
+			re_db = re.search("(\S+)\.hmm", db)
+			if re_db:
+				db = re_db.group(1)
+			tempTemplate = Template("hmmsearch -E 1e-5 -A $db.$qr.aln --domtblout $db.$qr.domain $db.hmm $qr > $db.$qr.search")
+			cmd = (tempTemplate.substitute(db = db, qr = sys.argv[3]))
+			os.system (cmd)
+##################### help information ##########################################
+		elif sys.argv[1] == "backup":
+			if len(sys.argv) == 3:
+				cmd = ("cd " + abyss_path + "/.. && mkdir ABYSsWrapper" + sys.argv[2] + " && for i in `ls | grep -v combin | grep -v du.log | grep -v ABYSsWrapper`;do cp -r $i ABYSsWrapper" + sys.argv[2] + "; done && mv ABYSsWrapper" + sys.argv[2] + " ..")
+				os.system(cmd)
+###############################################################################
+		else:
+			cmd_id = sys.argv[1]
+			cmd_cmd = shell_(cmd_id)
+			if not cmd_cmd:
+				cmd_id = re.sub('\.', '/', cmd_id)
+				print ('', end = "")
+#				print (cmd_id)
+				cmd_cmd = shell_(cmd_id)
+			if not cmd_cmd:
+				cmd_id = re.sub('\/', '/abysw.', cmd_id)
+				print ('', end = "")
+				print (cmd_id)
+				cmd_cmd = shell_(cmd_id)
+			if cmd_cmd:
+				re_cmd = re.search('ABYSsWrapper/bin/\.\./([^\/\s]+)', cmd_cmd)
+				if re_cmd:
+					exe_ = re_cmd.group(1)
+					if re_cmd.group(1) == "shell": exe_ = "sh"
+					if re_cmd.group(1) == "R": exe_ = "Rscript"
+					if re_cmd.group(1) == "perl": exe_ = "perl"
+					if len(sys.argv) > 2:
+						os.system(exe_ + " " + cmd_cmd + " " +  ' '.join(sys.argv[2:]))
+					elif (a_defalt):
+						os.system(exe_ + " " + cmd_cmd)
+					else:
+#						print ("this fuction is not online, please feedback to the author to add new features!")
+						print (ahelp.c_blue("this fuction is only beta version, but you can try to use it, please not panic!"))
+						print (ahelp.c_green("User guide:"))
+						print (ahelp.ahash2(cmd_id))
+
+			else:
+				print (ahelp.c_red("no \"" + sys.argv[1] + "\" function, please type `abysw -h` for more help"))
+				print (ahelp.c_blue("this fuction is not online, please feedback to the author to add new features!"))
+###############################################################################
+##############################################################################
+def test(args):
+	print ("the number is " + args[0])
+
+def splitgvcf(args):
+	[gvcf] = args
+	prefix_re = re.match("([^\.]+)", gvcf)
+	prefix = prefix_re.group(1)
+	fo = os.popen("gunzip -c " + gvcf, 'r')
+	chr = {}
+	ID = 'Pchr'
+	chr["Pchr"] = ""
+	print ("Welcome to use abyssTools, have a nice experience!\n")
+	print ("For a quick experience, split_gvcf.pl is recommended:\n")
+	os.system("abysw perl")
+	print ("split_gvcf.pl " + gvcf)
+	for line in fo:
+		if "#" in line:
+			re_id = re.match("##contig=<ID=((\w*)\d+),length=", line)
+			if re_id:
+				if ID == "Pchr":
+					ID = re_id.group(2)
+				if re_id.group(2) == ID:
+					chr[re_id.group(1)] = ""
+		else:
+			break
+	fo = os.popen("gunzip -c " + gvcf, 'r')
+	check = ''
+	for line in fo:
+		if "#" in line:
+			if "contig" in line:
+				re_id = re.match("##contig=<ID=((\w*)\d+)", line)
+				if re_id:
+					if re_id.group(1) in chr.keys():
+						chr[re_id.group(1)] += line
+					else:
+						chr["Pchr"] += line
+			else:
+				for i in chr.keys():
+					chr[i] += line
+		else:
+			break
+
+	for i in chr.keys():
+		ft = open(prefix + "." + i + ".g.vcf", 'w')
+		ft.write(chr[i])
+	fo = os.popen("gunzip -c " + gvcf, 'r')
+	check = ''
+	for line in fo:
+		if "#" in line:
+			continue
+		else:
+			lines = line.split()
+			i = lines[0]
+			if i in chr.keys():
+				if i in line:
+					if check != i:
+						ft = open(prefix + "." + i + ".g.vcf", 'a')
+						check = i
+					ft.write(line)
+					chr[i] += line
+			else:
+				if check != "Pchr":
+					ft = open(prefix + "." + i + ".g.vcf", 'a')
+					check = i
+				ft.write(line)
+
+def add(args):
+	[file1, file2, key1, target1, key2] = args[0:5]
+	fo = open(file1, 'r')
+	key1 = int(key1) - 1
+	key2 = int(key2) - 1
+	target1 = int(target1) - 1
+	target = {}
+	for line in fo:
+		line = line.strip()
+		line = line.split('\t')
+		if len(line) != 4:
+			continue
+		target[line[key1]] = line[target1]
+	fo = open(file2, 'r')
+	for line in fo:
+		line = line.strip()
+		line = line.split('\t')
+		target2 = "NA"
+		if line[key2] in target.keys():
+			target2 = target[line[key2]]
+		print ("\t".join(line[0:key2+1]) + "\t" + target2 + "\t" + "\t".join(line[key2 + 1:]))
+
+def dlssr(args):
+	file = args[0]
+	print (file)
+	fo = open(file, "r")
+	for line in fo:
+		line = line.strip()
+		ft = open(line + ".sh", "w")
+		ft.write("export PATH=/xulab/pipeline/soft/sratoolkit.2.11.0-centos_linux64/bin:$PATH\nprefetch -O . " + line + "\n")
+		ft.write("cd {}; fastq-dump {}.sra --split-3 --gzip -A {} -O {}; cd {}; mv {}_1.fastq.gz {}_1.fq.gz; mv {}_2.fastq.gz {}_2.fq.gz; cd ..; mv {}.sra ..".format(line, line, line, line, line, line, line, line, line, line))
+		ft.write("echo -ne \"Finishd at \"; date\nmv {}.sh {}.sh.done\n".format(line, line))
+
+def fam(args):
+	[f_fam, f_chara, number] = args[0:3]
+	re_fam = re.match("(\S+).fam", f_fam)
+	ff_fam = f_fam
+	if re_fam:
+		ff_fam = re_fam.group(1)
+	print ("cp " + ff_fam + ".fam." + number + ".tmp " + f_fam)
+	print ("gemma -bfile " + ff_fam + " -gk 2 -o kinship_" + number)
+	print ("gemma -bfile " + ff_fam + " -lmm -k output/kinship_" + number + ".sXX.txt -o GWAS_" + number)
+	print ("abysw manhattan output/GWAS_" + number + ".assoc.txt ", end = "")
+	global a_defalt
+	if args == 4:
+		if args[3] == "-d":
+			a_defalt = 1
+	number = int(number) - 1
+	chara = {}
+	homo = {}
+	fo = open(f_chara, 'r')
+	head = 0
+	for line in fo:
+		line = line.strip()
+		line = line.split("\t")
+		if len(line) <= number:
+			continue
+		if head == 0:
+			print ("\"" + line[number] + "\" " + f_fam)
+			head = 1
+		chara[line[0]] = line[number]
+		homo[line[number]] = line[number]
+	j = 0
+	for i in sorted(homo.keys()):
+		if i != "":
+			j = j + 1
+			homo[i] = j
+
+	if a_defalt == 1:
+		for i in chara.keys():
+			chara[i] = homo[chara[i]]
+	
+	ft = open(f_fam + "." + str(number + 1) + ".tmp", 'w')
+	fo = open(f_fam, 'r')
+	for line in fo:
+		line = line.strip()
+		line = line.split()
+		line[5] = "-9"
+		if line[0] in chara.keys():
+			re_homo = re.match("\S+", str(chara[line[0]]))
+			if not re_homo:
+				line[5] = "-9"
+			else:
+				line[5] = str(chara[line[0]])
+				if line[5] == "NA" or line[5] == "na" or line[5] == "Na":
+					line[5] = "-9"
+		ft.write("\t".join(line) + "\n")
+	if a_defalt == 1:
+		ft = open(f_chara + str(number + 1) + ".tmp", 'w')
+		for i in sorted(homo.keys()):
+			ft.write(i + "\t" + str(homo[i]) + '\n')
+
+def gatk(args):
+	[reference, fastq, outprefix] = args
+	cmd = abyss_path + "/shell/resequencing.cmd.sh " + " ".join([reference, fastq, outprefix])
+	os.system (cmd)
+
+def pca(args):
+	name = args[0]
+	cmd = "plink --vcf " + name 
+	re_name = re.match('(\S+).vcf', name)
+	if re_name:
+		name = re_name.group(1)
+	cmd += " --make-bed --out " + name + ".snp --allow-extra-chr\n"
+	cmd += "gcta64 --bfile " + name + ".snp --make-grm --autosome --out " + name + ".tmp\n"
+	cmd += "gcta64 --grm " + name + ".tmp --pca 3 --out " + name + ".pca\n"
+	cmd += "#abysw pcagroup group.list " + name + ".pca.eigenvec > "  + name + ".pca.eigenvec\n"
+	cmd += '''for i in {1..9};do echo "admixture --cv ''' + name + '''.snp.bed $i |tee ''' + name + '''log${i}.out &";done | sh\n'''
+	print (cmd)
+
+def ld(args):
+	[vcf, group] = args[0:2]
+	cmd = "PopLDdecay -InVCF " + vcf + " -SubPop " + group + " -MaxDist 1000 -OutStat " + group + ".stat"
+	print (cmd)
+
+def snpeff(args):
+	if len(args) == 1:
+		ahelp.help(snpeff)
+		sys.exit("abysw snpeff ref.name file.vcf")
+	ref, vcf = args
+#	print ("/abysw/soft/snpEff/exec/snpeff ann " + ref + " " + vcf + " -s " + vcf + ".ann.summary.html > " + vcf + ".ann.vcf")
+
+	os.system("~/.abysw/soft/snpEff/exec/snpeff ann " + ref + " " + vcf + " -s " + vcf + ".ann.summary.html > " + vcf + ".ann.vcf")
+
+def qs(args):
+	list = args
+	mydir = os.getcwd()
+	for line in list:
+		host = os.popen('hostname')
+		info = host.readline()
+		info = info.strip('\n')
+		re_dir = re.search('(\S+)\/([^\/]+)$',line)
+		dir = os.getcwd()
+		if re_dir:
+			re_d = re.search('^\/',re_dir.group(1))
+			if re_d:
+				dir = re_dir.group(1)
+			else:
+				dir += '/' + re_dir.group(1)
+			i = re_dir.group(2)
+		else:
+			i = line
+		os.chdir(dir)
+		if os.path.exists("abyss"):
+			cmd = "";
+		else:
+			cmd = 'mkdir abyss; '
+		cmd += 'echo cd ' + dir + ' > abyss/' + i + ';cat ' + i + ' >> abyss/' + i + '; cd abyss;'
+		cmd += "qsub -l mem=" + args[0] + "G,nodes=1:ppn=" + args[1] + " " + i
+		cmd += ';cd ..;'
+		os.system(cmd)
+		os.chdir(mydir)
+
+def chd(args):
+	dir_new = args[0]
+	cmd = ''
+	cmd += """ sed -i '/^alias\ """ + dir_new + """=/d' ~/.bash_profile\n"""
+	if len(args) == 2 and args[1] == "del":
+		print ("delete old alias " + dir_new)
+	elif len(args) == 1:
+		print ("add new alias directory name: " + args[0])
+		cmd += """ sed -i '$a alias\ """ + dir_new + """="cd """ + os.getcwd() + """"' ~/.bash_profile """
+	else:
+		sys.exit("please check your command !")
+	os.system(cmd)
+	print ("source ~/.bash_profile")
+
+def wig2bed(args):
+	[file] = args[0:1]
+	fo = open(file)
+	for line in fo:
+		line = line.strip()
+		re_head = re.search('chrom=(\S+)\s+start=(\d+)',line)
+		if re_head:
+			chr = re_head.group(1)
+			i = re_head.group(2)
+			i = int(i)-1
+		else:
+			print ("{}\t{}\t{}\t{}".format(chr, i, i+1, line))
+			i += 1
+
+def unqid(args):
+	[file] = args[0:1]
+	fo = open(file)
+	dict_id = {}
+	for line in fo:
+		line = line.strip()
+		list = line.split()
+		if list[0] not in dict_id.keys():
+			dict_id[list[0]] = []
+		dict_id[list[0]].append(list[1])
+	for i in dict_id.keys():
+		print (i + "\t", end = "")
+		print (";".join(dict_id[i]))
+
+def callcbs(args):
+	[msa] = args[0:1]
+	fo = open(msa)
+	len_r = 0
+	check = 0
+	for line in fo:
+		line = line.strip()
+		re_head = re.match(r'(\S)', line)
+		if re_head:
+			head = re_head.group()
+		if head == '#':
+			print (line)
+		elif not re_head:
+			if len(seq_id) >= 5 and check > 0:
+				print (block)
+			len_r = 0
+		else:
+			list = line.split( )
+			if head == 'a':
+				block = line + "\n"
+				seq_r = ''
+				seq_id = []
+			elif head == 's':
+				if len_r == 0:
+					len_r = int(list[3])
+					seq_r = list[6]
+					for i in range(0,len(seq_r)):
+						re_i = re.match(r'[ATCGatcg]', seq_r[i])
+						if re_i:
+							seq_id.append(i)
+					block += line + "\n"
+					if not 'Medicago_truncatula' in line:
+						seq_id = []
+					check = 0
+				else:
+					seq_q = list[6]
+					count = 0
+					if 'null' in seq_q:
+						continue
+					for i in seq_id:
+						re_i = re.match(r'[ATCGatcg]', seq_q[i])
+						if re_i:
+							count += 1
+						if count >= 5 and count/len(seq_id) >= 0.5:
+							block += line + "\n"
+							check += 1
+	print ("##eof maf")
+
+def end(args):
+	[fasta] = args[0:1]
+	a_del = ""
+	if len(args) > 1:
+		a_del = int(args[1])
+	fo = open(fasta, 'r')
+	id = ""
+	seq = ""
+	text = ""
+	for line in fo:
+		re_id = re.match('>(\S+)', line)
+		if re_id:
+			if (len(id) > 0):
+				text = re.sub('[\.\*]+\n$', '\n', text)
+				re.text = re.search('\.', text)
+#				if re.text and a_del:
+#					print ('', end = '')
+				if re.text and a_del:
+					if a_del > 0:
+						print ('', end = '')
+					else:
+						text = re.sub('[\.\*]', '', text)
+						print (">" + id + "\n" + text , end = "")
+				else:
+					print (">" + id + "\n" + text , end = "")
+			text = ""
+			seq = ""
+			id = re_id.group(1)
+		else:
+			text += line
+			line = line.strip()
+			seq += line
+	if (len(id) > 0):
+		text = re.sub('[\.\*]+\n$', '\n', text)
+		re.text = re.search('\.', text)
+#		if re.text and a_del:
+#			print ('', end = '')
+		if re.text and a_del:
+			if a_del > 0:
+				print ('', end = '')
+			else:
+				text = re.sub('[\.\*]', '', text)
+				print (">" + id + "\n" + text , end = "")
+		else:
+			print (">" + id + "\n" + text , end = "")
+
+def sort(args):
+	[sort_list, file] = args[0:2]
+	number = 0
+	if len(args) > 2:
+		number = int(args[2])
+	sort_dict = {}
+	fo = open(file, 'r')
+	for line in fo:
+		line = line.strip()
+		list = line.split()
+		sort_dict[list[number]] = line
+	fo = open(sort_list, 'r')
+	for line in fo:
+		line = line.strip()
+		if line in sort_dict.keys():
+			print (sort_dict[line])
+		else:
+			if len(args) > 3:
+				print (line + "\t" + args[3])
+
+def miss(args):
+	[file1, file2] = args
+	fo = open(file1, 'r')
+	miss_dict = {}
+	for line in fo:
+		miss_dict[line] = 1
+	fo = open(file2, 'r')
+	for line in fo:
+		if line not in miss_dict.keys():
+			print (line, end = '')
+
+def getfa(args):
+	[gene, fasta] = args
+	gene_id = {}
+	if os.path.exists(gene):
+		fo = os.popen("cat " + gene)
+		#fo = open(gene, 'r')
+		for line in fo:
+			re_id = re.match('(\S+)', line)
+			if re_id:
+				gene_id[re_id.group(1)] = 1
+	else:
+		gene_id[gene] = 1
+	fo = open(fasta, 'r')
+	id = ""
+	seq = ""
+	text = ""
+	for line in fo:
+		re_id = re.match('>(\S+)', line)
+		if re_id:
+			if (len(id) > 0 and id in gene_id.keys()):
+				print (">" + id + "\n" + text , end = "")
+			elif(len(id) > 0):
+				sys.stderr.write(">" + id + "\n" + text)
+			text = ""
+			seq = ""
+			id = re_id.group(1)
+		else:
+			text += line
+			line = line.strip()
+			seq += line
+	if (len(id) > 0 and id in gene_id.keys()):
+		print (">" + id + "\n" + text , end = "")
+	elif (len(id) > 0):
+		sys.stderr.write(">" + id + "\n" + text)
+
+def gffid(args):
+	file = args[0]
+	file = args[0]
+	name = ''
+	if len(args) == 2:
+		name = args[1]
+	else:
+		name = re.search('(\w\w)[^\_\/]*\_(\w\w\w)[^\/]+$',file)
+		name = name.group(1) + name.group(2)
+		id_re_x = re.search('(\w\w)[^\_\/]*\_x\_(\w\w\w)[^\/]+$', file)
+		if id_re_x:
+			name = id_re.group(1) + id_re.group(2) #id_re.group(2) + id_re.group(1)
+	fo = open(file,"r")
+	for line in fo:
+		re_head = re.match('^#', line)
+		if re_head:
+			continue
+		line = line.strip()
+		text = line.split("\t")
+		if len(text) < 8:
+			continue
+		id_name = re.match('([^\|\s]+)',text[0])
+		if id_name:
+			text[0] = name + '_' + id_name.group(1)
+		re_id = re.search('ID=([^\;]+)', text[8])
+		re_pr = re.search('Parent=([^\s\;]+)', text[8])
+		re_rna = re.search('RNA', text[2])
+		if text[2] == "gene":
+			if re_id:
+				text[8] = "ID=" + name + '_' + re_id.group(1) + ";"
+		elif re_rna:
+			if re_id:
+				text[8] = "ID=" + name + '_' + re_id.group(1) + ";"
+			if re_pr:
+				text[8] += 'Parent=' + name + '_' + re_pr.group(1) + ";"
+		else: 
+			if re_pr:
+				text[8] = 'Parent=' + name + '_' + re_pr.group(1) + ";"
+			else:
+				if re_id:
+					text[8] = "Parent=" + name + '_' + re_id.group(1) + ";"
+		print ('\t'.join(text))
+
+def faid(args):
+	fa = args[0]
+	new_id = ''
+	if len(args) >= 2 and  args[1] != '0':
+		new_id = args[1]
+	else:
+		id_re = re.search('(\w\w)[^\_\/]*\_(\w\w\w)[^\/]+$',fa)
+		new_id = id_re.group(1) + id_re.group(2)
+		id_re_x = re.search('(\w\w)[^\_\/]*\_x\_(\w\w\w)[^\/]+$',fa)
+		if id_re_x:
+			new_id = id_re.group(1) + id_re.group(2) #id_re.group(2) + id_re.group(1)
+	file_o = open(fa,"r")
+	length = 0
+	seq = ''
+	new_name = ''
+	mylen = 0
+	if len(args) > 2:
+		mylen = int(args[2])
+	for line in file_o:
+		id_name = re.match('\>([^\|\s]+)',line)
+		if id_name:
+			if length > mylen:
+				print (">" + new_name)
+				print (seq, end = '')
+			length = 0
+			seq = ''
+			new_name = new_id + "_" + id_name.group(1)
+		else:
+			length += len(line) -1
+			seq += line
+	if length > mylen:
+		print (">" + new_name)
+		print (seq)
+
+def f_fa(args):
+	[fa, cut] = args
+	fo = open(fa)
+	id = ""
+	seq = ""
+	text = ""
+	for line in fo:
+		re_id = re.match('>(\S+)', line)
+		if re_id:
+			if (len(seq) >= int(cut) and len(id) > 0):
+				print (">" + id + "\n" + text , end = "")
+			elif id:
+				sys.stderr.write(">" + id + "\n" + text)
+			text = ""
+			seq = ""
+			id = re_id.group(1)
+		else:
+			text += line
+			line = line.strip()
+			seq += line
+	if (len(seq) >= int(cut) and len(id) > 0):
+		print (">" + id + "\n" + text , end = "")
+	else:
+		sys.stderr.write(">" + id + "\n" + text)
+
+def fa2phy(args):
+	"""
+	%prog fa2phy *.fa > *.phy
+	"""
+	fo = open(sys.argv[2])
+	count = 0
+	seq = ""
+	text = ""
+	for line in fo:
+		re_id = re.match('>(\S+)', line)
+		if re_id:
+			id = re_id.group(1)
+			count = count + 1
+			text += "\n" + id + '    '
+			seq = ""
+		else:
+			line = line.strip()
+			text += line
+			seq += line
+	print (str(count) + "    " + str(len(seq)) + text )
+
+def phy2fa(args):
+	"""
+	%prog phy2fa *.phy > *.fa
+	"""
+	head = "yes"
+	fp = open(sys.argv[2])
+	if len(args) == 2:
+		nohead = args[1]
+	if head != "yes":
+		fp.readline()
+	for line in fp:
+		list = line.split()
+		print (">" + list[0])
+		print (list[1])
+
+def spgff(args):
+	fp = open(sys.argv[2])
+	dict_chr = {}
+	for line in fp:
+		re_ot = re.match('(\S+)', line)
+		re_head = re.match('#', line)
+		if re_head:
+			continue
+		if re_ot:
+			if not re_ot.group(1) in dict_chr.keys():
+				to = open(re_ot.group(1) + ".gff", 'w+')
+				dict_chr[re_ot.group(1)] = 1
+			else:
+				to = open(re_ot.group(1) + ".gff", 'a')
+			to.writelines(line)
+def get_cds_from_gff(agrs):
+	fp = open(sys.argv[2])
+	re_file = re.match('(\S+).gff', sys.argv[2])
+	if re_file:
+		fo = open(re_file.group(1) + '.cds', 'w')
+	re_file = re.match('(\S+).bed', sys.argv[2])
+	if re_file:
+		fo = open(re_file.group(1) + '.cds', 'w')
+	dict_gene = {}
+	for line in fp:
+		list = line.split('\t')
+		re_gff = re.match('^\d+$', list[1])
+		if re_gff:
+			dict_gene[list[3]] = 1
+		else:
+			re_gene = re.search('ID=([^;\s]+)', line)
+			if re_gene:
+				dict_gene[re_gene.group(1)] = 1
+	fp.close()
+	fp = open(sys.argv[3])
+	for line in fp:
+		re_gene = re.search('\>(\S+)', line)
+		if re_gene:
+			id_gene = re_gene.group(1)
+			if id_gene in dict_gene.keys():
+				fo.writelines(line)
+		else:
+			if id_gene in dict_gene.keys():
+				fo.writelines(line)			
+
+### genelist, bed file, length[500000]
+def get_bed_from_gene_list(args):
+	fp = os.popen('grep -f ' + sys.argv[2] + ' ' + sys.argv[3])
+	scaf = {}
+	#re_file = re.match('(\S+).gff', sys.argv[2])
+	for line in fp:
+		line = line.strip()
+		line = line.split('\t')
+		if not line[0] in scaf.keys():
+			scaf[line[0]] = {}
+		scaf[line[0]]['gene'] = line[3]
+		scaf[line[0]]['start'] = int(line[1]) - int(sys.argv[4])
+		scaf[line[0]]['end'] = int(line[2]) + int(sys.argv[4])
+	fp.close()
+	fp = open(sys.argv[3])
+	for line in fp:
+		lines = line
+		line = line.strip()
+		line = line.split('\t')
+		if line[0] in scaf.keys():
+			ft = open(scaf[line[0]]['gene'] + '.bed', 'a')
+			if int(line[2]) > scaf[line[0]]['start'] and int(line[1]) < scaf[line[0]]['end']:
+				ft.write(lines)
+	
+def get_gene_flank(args):
+	gene_list, bed, upstream, downstream = args
+	fp = os.popen('grep -f ' + gene_list + ' ' + bed)
+	tmp1, tmp2 = upstream, downstream
+	for lines in fp:
+		line = lines.strip()
+		line = line.split('\t')
+		re_dig = re.match('^\d+$', line[1])
+		l_str = line[1]
+		l_end = line[2]
+		if re_dig: # bed file
+			if line[5] == "-":
+				upstream, downstream = tmp2, tmp1
+			#line[1] = line[1] + upstream
+			else:
+				upstream, downstream = tmp1, tmp2
+			if upstream == "not":
+				line[1] = l_end #line[2]
+			else:
+				line[1] = str(int(line[1]) - int(upstream))
+			if int(line[1]) < 0:
+				line[1] = '0'
+			if downstream == "not":
+				line[2] = l_str #line[1]
+			else:
+				line[2] = str(int(line[2]) + int(downstream))
+		else:      # gff file 
+			l_str = line[3]
+			l_end = line[4]
+
+			if line[6] == "-":
+				upstream, downstream = tmp2, tmp1
+			else:
+				upstream, downstream = tmp1, tmp2
+			if upstream == "not":
+				line[3] = l_end
+			else:
+				line[3] = str(int(line[3]) - int(upstream))
+			if int(line[3]) < 0:
+				line[3] = '0'
+			if downstream == "not":
+				line[4] = l_str
+			else:
+				line[4] = str(int(line[4]) + int(downstream))
+		print ('\t'.join(line))
+
+def linkfa(args):
+	sp_list, fa_files = args
+	fp = open(sp_list) #species list
+	species_s = []
+	for i in fp:
+		i = i.strip('\n')
+		list = re.split('\s+',i)
+		for j in list:
+			species_s.append(j)
+	muscle_file = fa_files # 'ls *le'
+	fp1 = os.popen(muscle_file)
+
+	count = 0
+	dict_s = {}
+	dict_sp = {}
+	for line in fp1:
+		if not os.path.getsize:
+				continue
+		line = line.strip('\n')
+		fpf = open(line)
+		seq = ''
+		id = ''
+		seq_l = 0
+		dict_s = {}
+		#print line
+		for linef in fpf:
+#			id_re = re.match('>\S+\_(\w\w\w\w\w)',linef)
+			id_re = re.match('>(\w\w\w\w\w)',linef)
+			if id_re:
+				if len(seq) > 0:
+#					seq = re.sub(r'^ATG|TAA$|TAG$|TGA$','---',seq)
+					dict_s[id] = seq
+					seq_l = len(seq)
+				seq = ''
+				id = id_re.group(1)
+			else:
+				seq_s = linef.strip('\n')
+				seq += seq_s
+		if len(seq) > 0:
+#			seq = re.sub(r'^ATG|TAA$|TAG$|TGA$','---',seq)
+			dict_s[id] = seq
+			seq_l = len(seq)
+		seq = ''
+
+		for i in species_s:
+			re_sp = re.search('(\w\w)[a-z]*\_(\w\w\w)',i)
+			id = ''
+			if re_sp:
+				id = re_sp.group(1) + re_sp.group(2)
+			else:
+				id = i
+			if not i in dict_sp.keys():
+				dict_sp[i] = ''
+			if id in dict_s.keys():
+				dict_sp[i] += dict_s[id]
+			else:
+				dict_sp[i] += '-'*seq_l
+	print ('{}\t{}'.format(len(species_s), len(dict_sp[species_s[0]])))
+	for i in species_s:
+		print (i + '    ' + dict_sp[i])
+def maf2bed(args):
+	msa = args[0]
+	fi = open(msa)
+	check = 0
+	for line in fi:
+		re_head = re.match(r'a', line)
+		if check == 1:
+			line = line.strip()
+			line = line.split()
+			#print (line)
+			print (line[1] + '\t' + line[2] + "\t" + str(int(line[2]) + int(line[3])))
+			check = 0
+		if re_head:
+			check = 1
+def gb2gff(args):
+	gb = args[0]
+	global chr
+	block = ""
+	chr = ""
+	seq = ""
+	id = ""
+	pep = ""
+	gff = ""
+	ft1= open (gb + ".gff3", "w")
+	ft2= open (gb + ".fa", "w")
+	ft3= open (gb + ".pep", "w")
+	ft4= open (gb + ".gff", "w")
+	fo = open (gb)
+	for line in fo:
+		if "VERSION" in line:
+			line = line.strip()
+			line = line.split()
+			chr = line[1]
+			continue
+		if len(line) > 5 and line[5].isalpha():
+			line = line.strip()
+			if chr in block:
+				continue
+				block = ""
+			else:
+				[pep, gff] = block_a(block)
+				ft1.write(gff)
+				if gff:
+					if "\tgene\t" in gff:
+						gff = gff.replace("\tgene\t", "\tmRNA\t")
+						gff = gff.strip()
+						gffs = gff.split("\n")
+						start = 0
+						end = 0
+						jj = []
+						for j in gffs:
+							jj = j.split("\t")
+							if len(jj) < 9:
+								continue
+							if len(jj) == 9:
+								if start == 0 or int(jj[3]) < start:
+									start = int(jj[3])
+								if int(jj[4]) > end:
+									end = int(jj[4])
+						if len(jj) == 9:
+							ft4.write("\t".join([jj[0], jj[1], jj[2], str(start), str(end), jj[5], jj[6], jj[7], jj[8]]) + "\n")
+					elif "\tCDS\t" in gff:
+						gff = gff.replace("ID=", "Parent=")
+						ft4.write(gff)
+				if pep:
+					ft3.write(pep)
+				block = line
+		else:
+			line = line.strip()
+			block += line
+		if "ORIGIN" in line:
+			seq = "".join(fo.readlines())
+	
+	seq = re.sub("[\d\s\/]", "", seq)
+	ft2.write(">" + chr + "\n" + seq + "\n")
+	[pep, gff] = block_a(block)
+	ft1.write(gff)
+	ft3.write(pep)
+
+
+def block_a(args):
+	block = args
+	blocks = block.split("/")
+	pep = ""
+	gff = ""
+	if len(blocks) > 3:
+		gene = blocks[0].split()[0]
+		loc = blocks[0].split()[1]
+		pep = re.search("\/translation=\"([^\"]+)\"", block)
+		if pep:
+			id = re.search("\/gene=\"([^\"]+)\"", block)
+			if id:
+				id = id.group(1)
+			pep = pep.group(1)
+			pep = (">" + id + "\n" + pep + "\n")
+		for i in loc.split(","):
+			start = i.split("..")[0]
+			start = re.findall(r"\d+", start)[-1]
+			end = i.split("..")[1]
+			end = re.findall(r"\d+", end)[0]
+			id = blocks[1]
+			id = id.replace("\"", "")
+			id = id.replace("gene", "ID")
+
+			gff += ("\t".join([chr, "gb2gff", gene, str(start), str(end), ".", "+", ".", id ]) + "\n")
+	return [pep, gff]
+
+######################## main ####################
+
+if __name__ == "__main__":
+	if len(sys.argv) == 1:
+		printusage()
+		sys.exit("\t" + a_help + "\n\n" + a_version )
+	else:
+		main(sys.argv[1:])
