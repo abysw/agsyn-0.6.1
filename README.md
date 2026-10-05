@@ -6,6 +6,8 @@
 ## or 
 `conda create -n agsyn -c conda-forge -c bioconda python=3.10 agsyn`
 
+`ln -s $CONDA_PREFIX/share/agsyn/* $CONDA_PREFIX`
+
 ![agsyn outline](./agsyn.outline.png)
 
 # In this software, there are 6 commands.
