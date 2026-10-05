@@ -4,9 +4,7 @@
 `conda install -c conda-forge -c bioconda agsyn`
 
 ## or 
-`conda create -n agsyn -c conda-forge cyipopt python=3.10 -y`
-
-`conda activate agsyn && conda install -c bioconda agsyn` 
+`conda create -n agsyn -c conda-forge -c bioconda python=3.10 agsyn`
 
 ![agsyn outline](./agsyn.outline.png)
 
