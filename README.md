@@ -1,6 +1,5 @@
-##############################################
 #	agsyn.0.6.1 (abysw.0.7.6)
-#############################################
+
 ## How to install! 
 `conda install -c conda-forge -c bioconda agsyn`
 
@@ -29,9 +28,8 @@
 ## 6. Anchor contigs to pseudo-chromosome
 	`abysw agsyn.anchor reference query`
 
-############################################
 # quickly start
-############################################
+
 ### Prepared the genome file and the protein evidence.
 <pre>
 	genome/
@@ -58,8 +56,8 @@
 	Elmis_aenea.asex 
 	Elmis_aenea.seqids 
 </pre>
-###################################################
- 
+
+### Run script
 <pre>
 #reference species
 R=Elmis_aenea
