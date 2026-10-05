@@ -32,29 +32,37 @@
 # quickly start
 ############################################
 ### Prepared the genome file and the protein evidence.
-#### 	genome/
-#### 		Genus_species.fa
-#### 	protein/
-#### 		protein1.pep
-#### 		protein2.pep
+<pre>
+	genome/
+ 		Genus_species.fa
+ 	protein/
+ 		protein1.pep
+ 		protein2.pep
+</pre>
 
 ## run the main script
 `abysw agsyn run`
 
 ## Prepared syntenic relationships
+<pre>
 	run jcvi for .simple files
-
+</pre>
 ## Run syntenic by agsyn
 ### prepare reference infomation
 <pre>
-	Elmis_aenea.aact Elmis_aenea.achr Elmis_aenea.acol Elmis_aenea.agsyn Elmis_aenea.asex Elmis_aenea.seqids 
+	Elmis_aenea.aact 
+	Elmis_aenea.achr 
+	Elmis_aenea.acol 
+	Elmis_aenea.agsyn 
+	Elmis_aenea.asex 
+	Elmis_aenea.seqids 
 </pre>
 ###################################################
  
 <pre>
 #reference species
 R=Elmis_aenea
-##### #species name list
+#species name list
 S=species.lst
 #path of species infomation
 P=~/agsyn/ref.Gallus_gallus
