@@ -46,18 +46,20 @@
 
 ## Run syntenic by agsyn
 ### prepare reference infomation
-#### 	Elmis_aenea.aact Elmis_aenea.achr Elmis_aenea.acol Elmis_aenea.agsyn Elmis_aenea.asex Elmis_aenea.seqids 
+<pre>
+	Elmis_aenea.aact Elmis_aenea.achr Elmis_aenea.acol Elmis_aenea.agsyn Elmis_aenea.asex Elmis_aenea.seqids 
+</pre>
 ###################################################
  
-#### reference species
-##### R=Elmis_aenea
-##### #species name list
-##### S=species.lst
-##### #path of species infomation
-##### P=~/agsyn/ref.Gallus_gallus
-
-##### mkdir picture 
 <pre>
+#reference species
+R=Elmis_aenea
+##### #species name list
+S=species.lst
+#path of species infomation
+P=~/agsyn/ref.Gallus_gallus
+
+mkdir picture 
 cd picture/
 cp ../*anchors/*{bed,info,simple} . 
 cp $P/$R.a* .
