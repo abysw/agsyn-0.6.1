@@ -1,31 +1,31 @@
 ##############################################
 #	agsyn.0.6.1 (abysw.0.7.6)
 #############################################
-# How to install! 
+## How to install! 
 `conda install -c conda-forge -c bioconda agsyn`
 
-# or 
+## or 
 `conda install -c conda-forge cyipopt && conda install -c bioconda agsyn` 
 
 ![agsyn outline](./agsyn.outline.png)
 
-# In this software, there are 6 scripts.
-# 1. the main script
-	`abysw agsyn run `
+# In this software, there are 6 commands.
+## 1. Main command
+	`abysw agsyn run`
 
-# 2. sort the chromosome order
+## 2. Order the chromosomes
 	`abysw agsyn.sort reference query`
 
-# 3. extra syntenic results
+## 3. Extra syntenic results
 	`abysw agsyn.syn reference query`
 
-# 4. Draw the picture
+## 4. Draw the picture
 	`abysw agsyn.draw query.agsyn`
 
-# 5. Annotate the special genes by genewise2
+## 5. Annotate the special genes by genewise2
 	`abysw agsyn gwise2 run`
 
-# 6. Anchor contigs to pseudo-chromosome
+## 6. Anchor contigs to pseudo-chromosome
 	`abysw agsyn.anchor reference query`
 
 ############################################
