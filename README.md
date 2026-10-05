@@ -57,7 +57,7 @@
 ##### P=~/agsyn/ref.Gallus_gallus
 
 ##### mkdir picture 
-cd picture/
+"""cd picture/
 cp ../*anchors/*{bed,info,simple} . 
 cp $P/$R.a* .
 cp /proj/snic2020-2-25/nobackup/yuan/10.AgSyn/99.publish_transfer/agsyn_sexG/*gff .
@@ -69,5 +69,5 @@ done
 
 cat $S | perl -ne 'chomp; print "$_.agsyn "' | perl -ne 'chomp; `cat $_ > Draw.agsyn`' && mv Draw.agsyn $S.agsyn
 abysw agsyn.draw $S.agsyn # draw syntenic
-
+"""
 
