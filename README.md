@@ -29,36 +29,34 @@
 	`abysw agsyn.anchor reference query`
 
 ############################################
-### quickly start
+# quickly start
 ############################################
-Prepared the genome file and the protein evidence.
-	genome/
-		Genus_species.fa
-	protein/
-		protein1.pep
-		protein2.pep
+### Prepared the genome file and the protein evidence.
+#### 	genome/
+#### 		Genus_species.fa
+#### 	protein/
+#### 		protein1.pep
+#### 		protein2.pep
 
-run the main script
-	`abysw agsyn run`
-##########################################
-Prepared syntenic relationships
+## run the main script
+`abysw agsyn run`
+
+## Prepared syntenic relationships
 	run jcvi for .simple files
 
+## Run syntenic by agsyn
+### prepare reference infomation
+#### 	Elmis_aenea.aact Elmis_aenea.achr Elmis_aenea.acol Elmis_aenea.agsyn Elmis_aenea.asex Elmis_aenea.seqids 
 ###################################################
-# Run syntenic by agsyn
-prepare reference infomation
-	Elmis_aenea.aact Elmis_aenea.achr Elmis_aenea.acol Elmis_aenea.agsyn Elmis_aenea.asex Elmis_aenea.seqids 
-	###################################################
  
-#reference species
-R=Elmis_aenea
-#species name list
-S=species.lst
-#path of species infomation
-P=~/agsyn/ref.Gallus_gallus
-##########################################################
+#### reference species
+##### R=Elmis_aenea
+##### #species name list
+##### S=species.lst
+##### #path of species infomation
+##### P=~/agsyn/ref.Gallus_gallus
 
-mkdir picture 
+##### mkdir picture 
 cd picture/
 cp ../*anchors/*{bed,info,simple} . 
 cp $P/$R.a* .
