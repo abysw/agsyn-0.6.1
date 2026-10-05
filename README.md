@@ -1,6 +1,9 @@
 ##############################################
 #	agsyn.0.6.1 (abysw.0.7.6)
 #############################################
+#How to install! 
+`conda install -c conda-forge -c bioconda agsyn`
+or `conda install -c conda-forge cyipopt && conda install -c bioconda agsyn` 
 
 ![agsyn outline](./agsyn.outline.png)
 
