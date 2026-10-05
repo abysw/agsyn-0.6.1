@@ -76,7 +76,7 @@ for i in col_list:
 
 #################### furture command set  ######################
 def shell_(cmd_id):
-	_shell_ = os.popen('ls ' + abyss_path + '/../*/abysw.' + cmd_id + '{.pl,.py,.sh,.R,.shell.pl}  2> /dev/null | tail -n 1')
+	_shell_ = os.popen('ls ' + abyss_path + '/../share/agsyn/*/abysw.' + cmd_id + '{.pl,.py,.sh,.R,.shell.pl}  2> /dev/null | tail -n 1')
 	_shell_ = _shell_.readline()
 	_shell_ = _shell_.strip()
 	return _shell_
